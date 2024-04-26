@@ -1,10 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    <h1>Hello World</h1>
-</body>
-</html>
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+<h1>Trang chu</h1>
+<div class="container text-center border">
+    <form>
+        <div>
+            <input class="form-check-input" type="radio" name="roundtrip" id="roundtrip" checked>
+            <label class="form-check-label" for="roundtrip">Khứ Hồi</label>
+            <input class="form-check-input" type="radio" name="roundtrip" id="oneway">
+            <label class="form-check-label" for="oneway">Một Chiều</label>
+        </div>
+        <div class="container text-center">
+            <div class="row align-items-start">
+                <div class="col">
+                    <label>Điểm đi:</label>
+                </div>
+                <div class="col">
+                    <select class="form-select" aria-label="Default select example">
+                        <option selected>Điểm đi</option>
+                        <option value="1">One</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Ngày đi:</label>
+                </div>
+                <div class="col">
+                    <input type="date" class="form-control" name="leavedate">
+                </div>
+            </div>
+            <div class="row align-items-start">
+                <div class="col">
+                    <label>Điểm đến:</label>
+                </div>
+                <div class="col">
+                    <select class="form-select" aria-label="Default select example">
+                        <option selected>Điểm đến</option>
+                        <option value="1">One</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>ngày về:</label>
+                </div>
+                <div class="col">
+                    <input type="date" class="form-control" name="returndate">
+                </div>
+            </div>
+            <div class="row align-items-start">
+                <div class="col">
+                    <label>Số lượng hành khách</label>
+                </div>
+                <div class="col">
+                    <input type="number" value="0" min="0" max="10" step="1">
+                </div>
+                <div class="col">
+                    <label>Hạng ghế:</label>
+                </div>
+                <div class="col">
+                    <select class="form-select" aria-label="Default select example">
+                        <option selected>Hạng ghế</option>
+                        <option value="1">One</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <a class="btn btn-success" href="/search_ticket">Tra Cứu</a>
+    </form>
+</div>
+
+{% endblock %}
