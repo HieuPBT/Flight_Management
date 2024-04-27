@@ -77,6 +77,7 @@ class ChuyenBay(Base):
     san_bay_trung_gian = relationship('SanBayTrungGian', backref='chuyen_bay', lazy=True)
 
 
+
 class HangVeChuyenBay(Base):
     hang_ve_id = Column(Integer, ForeignKey('hang_ve.id'), nullable=False)
     chuyen_bay_id = Column(Integer, ForeignKey('chuyen_bay.id'), nullable=False)
