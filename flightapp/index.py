@@ -1,8 +1,9 @@
 from flask import Flask, render_template
-from flightapp import app, login
+from flightapp import app, login, dao
+from flask_login import login_user, logout_user, login_required
 
 
-@app.route('/login')
+@app.route('/login', methods=['get', 'post'])
 def login_user():
     return render_template('login.html')
 
@@ -24,7 +25,7 @@ def home():
 
 @login.user_loader
 def load_user(user_id):
-    pass
+    return dao.get_user_by_id(int(user_id))
 
 
 if __name__ == '__main__':
