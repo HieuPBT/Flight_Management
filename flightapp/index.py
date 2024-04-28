@@ -1,11 +1,9 @@
 from flask import Flask, render_template
-
-
-app = Flask(__name__)
+from flightapp import app, login
 
 
 @app.route('/login')
-def login():
+def login_user():
     return render_template('login.html')
 
 
@@ -24,5 +22,12 @@ def home():
     return render_template('index.html')
 
 
+@login.user_loader
+def load_user(user_id):
+    pass
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        from flightapp import admin
+        app.run(debug=True)
