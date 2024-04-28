@@ -77,7 +77,6 @@ class ChuyenBay(Base):
     san_bay_trung_gian = relationship('SanBayTrungGian', backref='chuyen_bay', lazy=True)
 
 
-
 class HangVeChuyenBay(Base):
     hang_ve_id = Column(Integer, ForeignKey('hang_ve.id'), nullable=False)
     chuyen_bay_id = Column(Integer, ForeignKey('chuyen_bay.id'), nullable=False)
@@ -106,7 +105,7 @@ class Ve(Base):
 
 
 class HoaDon(Base):
-    ve_id = Column(Integer, ForeignKey('ve.id'), nullable=False)
+    ve = relationship('Ve', backref='hoa_don', uselist=False, lazy=True)
 
 
 class SanBayTrungGian(Base):
@@ -149,11 +148,11 @@ if __name__ == '__main__':
         #          user_role=UserRole.ADMIN)  # Use the ID of the created record
         # db.session.add(u)
         # db.session.commit()
-
+        #
         # info = ThongTinNguoiDung(ho_va_ten="admin", tai_khoan_id=u.id)
         # db.session.add(info)  # Add and commit information first
         # db.session.commit()
-
+        #
         # info2 = ThongTinNguoiDung(ho_va_ten="Nguyễn Xuân Lộc", so_dien_thoai='0362655091', dia_chi='Gia Lai', email='2151013052loc@gmail.com', CCCD='0798723983792')
         # db.session.add(info2)  # Add and commit information first
         # db.session.commit()
