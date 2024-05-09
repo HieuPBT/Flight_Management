@@ -19,8 +19,9 @@
                 </div>
                 <div class="col">
                     <select class="form-select" aria-label="Default select example">
-                        <option selected>Điểm đi</option>
-                        <option value="1">One</option>
+                        {% for i in SB %}
+                        <option>{{ i.tinh }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col">
@@ -36,8 +37,9 @@
                 </div>
                 <div class="col">
                     <select class="form-select" aria-label="Default select example">
-                        <option selected>Điểm đến</option>
-                        <option value="1">One</option>
+                        {% for i in SB %}
+                        <option>{{ i.tinh }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col">
@@ -52,20 +54,22 @@
                     <label>Số lượng hành khách</label>
                 </div>
                 <div class="col">
-                    <input type="number" value="0" min="0" max="10" step="1">
+                    <input type="number" value="1" min="1" max="10" step="1">
                 </div>
                 <div class="col">
-                    <label>Hạng ghế:</label>
+                    <label>Hạng vé:</label>
                 </div>
                 <div class="col">
                     <select class="form-select" aria-label="Default select example">
-                        <option selected>Hạng ghế</option>
-                        <option value="1">One</option>
+
+                        {% for i in HV %}
+                        <Option>{{ i.ten }}</Option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
         </div>
-        <a class="btn btn-success" href="/search_ticket">Tra Cứu</a>
+        <a class="btn btn-success" onclick="search_flight()">Tra Cứu</a>
     </form>
 </div>
 

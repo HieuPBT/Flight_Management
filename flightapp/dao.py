@@ -2,6 +2,14 @@ from models import *
 import hashlib
 
 
+def load_sanbay():
+    return SanBay.query.all()
+
+
+def load_hangve():
+    return HangVe.query.all()
+
+
 def get_user_by_id(id):
     return User.query.get(id)
 
