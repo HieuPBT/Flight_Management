@@ -125,7 +125,7 @@ class SanBayTrungGian(Base):
     san_bay_id = Column(Integer, ForeignKey('san_bay.id'), nullable=False)
     chuyen_bay_id = Column(Integer, ForeignKey('chuyen_bay.id'), nullable=False)
     thoi_gian_dung = Column(Integer, nullable=False)
-    note = Column(String, nullable=True)
+    note = Column(String(100), nullable=True)
     __table_args__ = (
         UniqueConstraint('san_bay_id', 'chuyen_bay_id'),
     )
