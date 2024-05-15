@@ -12,6 +12,18 @@ class UserRole(RoleEnum):
     TICKET_SELLER = 3
 
 
+class QuyDinhKey(RoleEnum):
+    NUAIRPORT = "Số lượng sân bay"
+    MINFLIGHT = "Thời gian bay tối thiểu"
+    MAXIMAIRPORT = "Số lượng sân bay trung gian tối đa"
+    MINSTOP = "Thời gian đừng tối thiểu"
+    MAXSTOP = "Thời gian dừng tối đa"
+    NUTICKETCLASS = "Số lượng hạng vé"
+    BASEPRICE = "Đơn giá vé"
+    SOLDTIME = "Thời gian bán vé"
+    BOOKINGTIME = "Thời gian đặt vé"
+
+
 class Base(db.Model):
     __abstract__ = True
 
@@ -73,18 +85,24 @@ class MayBay(Base):
     ghe_may_bay = relationship('GheMayBay', backref='may_bay', lazy=True)
     # chuyen_bay = relationship('ChuyenBay', backref='may_bay', lazy=True)
 
+    def __str__(self):
+        return self.ten
+
 
 class HangVe(Base):
     ten = Column(String(20), nullable=False)
     hang_ve_chuyen_bay = relationship('HangVeChuyenBay', backref='hang_ve', lazy=True)
 
+    def __str__(self):
+        return self.ten
+
 
 class ChuyenBay(Base):
-    ngay_gio_khoi_hanh = Column(DateTime, nullable=False)
+    ngay_gio_khoi_hanh = Column(DateTime, nullable=True)
     thoi_gian_bay = Column(Integer, nullable=False)
     tuyen_bay_id = Column(Integer, ForeignKey('tuyen_bay.id'), nullable=False)
     tuyen_bay = relationship('TuyenBay', foreign_keys=[tuyen_bay_id], lazy=True)
-    nhan_vien_quan_tri_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    nhan_vien_quan_tri_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     may_bay_id = Column(Integer, ForeignKey('may_bay.id'), nullable=False)
     may_bay = relationship('MayBay', foreign_keys=[may_bay_id], lazy=True)
     san_bay_trung_gian = relationship('SanBayTrungGian', backref='chuyen_bay', lazy=True)
@@ -132,7 +150,7 @@ class SanBayTrungGian(Base):
 
 
 class QuyDinh(Base):
-    key = Column(String(50), nullable=False, unique=True)
+    key = Column(Enum(QuyDinhKey), nullable=False, unique=True)
     value = Column(Integer, nullable=False)
     nhan_vien_quan_tri_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
@@ -208,11 +226,12 @@ if __name__ == '__main__':
 
         # hv1 = HangVe(ten='Thương Gia')
         # hv2 = HangVe(ten='Phổ Thông')
+        # hv3 = HangVe(ten='Tiết Kiệm')
         #
         # cb1 = ChuyenBay(ngay_gio_khoi_hanh='2024-5-10', thoi_gian_bay=200, tuyen_bay_id=1,
         #                 nhan_vien_quan_tri_id=1, may_bay_id=1)
         #
-        # db.session.add_all([hv1, hv2, cb1])
+        # db.session.add_all([hv3])
         #
         # db.session.commit()
 

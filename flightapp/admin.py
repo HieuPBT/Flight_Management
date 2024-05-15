@@ -50,6 +50,13 @@ class LapLichView(AuthenticatedView):
     }
 
 
+class CustomLapLichView(AuthenticatedView):
+    @expose('/create_flight_schedule/', methods=('GET', 'POST'))
+    # create_template = 'flight_schedule.html'
+    def create_view(self):
+        return self.render('flight_schedule.html')
+
+
 class StatsView(BaseView):
     @login_required
     @expose('/')
@@ -74,8 +81,9 @@ admin = Admin(app, name="Quản Lý Chuyến Bay", template_mode="bootstrap4")
 admin.add_view(SanBayView(SanBay, db.session, name="Sân Bay"))
 admin.add_view(TuyenBayView(TuyenBay, db.session, name="Tuyến Bay"))
 admin.add_view(QuyDinhView(QuyDinh, db.session, name="Quy Định"))
-admin.add_view((LapLichView(ChuyenBay, db.session, name="Lập Lịch Chuyến Bay")))
+admin.add_view((CustomLapLichView(ChuyenBay, db.session, name="Lập Lịch Chuyến Bay")))
 admin.add_view(ModelView(MayBay, db.session, name="Máy Bay"))
-admin.add_view(StatsView(name="Thống Kê"))
+admin.add_view(ModelView(User, db.session, name="Máy Bay"))
+admin.add_view(StatsView(name="Thống Kê", endpoint='Stats'))
 admin.add_view(LogoutView(name="Đăng Xuất"))
 

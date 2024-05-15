@@ -1,13 +1,43 @@
-from flask import Flask, render_template, request, redirect
-from flightapp import app, login, dao
+from flask import Flask, render_template, request, redirect, jsonify
+from flightapp import app, login, dao, configs
 from flask_login import login_user, logout_user, login_required
+from models import *
+import json
 
 
 @app.route('/')
 def index():
-    SB = dao.load_sanbay()
-    HV = dao.load_hangve()
+    SB = dao.load_airport()
+    HV = dao.load_ticket_class()
     return render_template('index.html', SB=SB, HV=HV)
+
+
+@app.route('/api/create_flight_schedule', methods=['POST'])
+def create_flight_schedule():
+    if request.method.__eq__('POST'):
+        depart = request.form.get('depart')
+        plane = request.form.get('plane')
+        depart_date_time = request.form.get('depart_date_time')
+        flight_duration = request.form.get('flight_duration')
+        tickets_data = json.loads(request.form.get('tickets_data'))
+        im_airport = json.loads(request.form.get('im_airport'))
+        print(tickets_data)
+        print(im_airport)
+
+        try:
+            dao.add_flight_schedule(depart, depart_date_time, flight_duration, plane, tickets_data, im_airport)
+        except Exception as ex:
+            print(ex)
+            return jsonify({'status': 500})
+        else:
+            return jsonify({'status': 200})
+
+    # return jsonify({'depart': depart,
+    #                 'depart_date_time': depart_date_time,
+    #                 'flight_duration':flight_duration,
+    #                 'tickets_data': tickets_data,
+    #                 'plane': plane,
+    #                 'im_airport': im_airport})
 
 
 @app.route('/api/search_flight')
@@ -37,6 +67,21 @@ def search_ticket():
     return render_template('ticket.html')
 
 
+@app.context_processor
+def common_attributes():
+
+    # value =
+    return {
+        'ticketclass': dao.load_ticket_class(),
+        'plane': dao.load_plane(),
+        'airport': dao.load_airport(),
+        'flight_route': dao.load_flight_route(),
+        'maxinairport': dao.load_config(QuyDinhKey.MAXIMAIRPORT).value,
+        'minstop': dao.load_config(QuyDinhKey.MINSTOP).value,
+        'nuticketclass': dao.load_config(QuyDinhKey.NUTICKETCLASS).value
+    }
+
+
 @login.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(int(user_id))
@@ -45,5 +90,4 @@ def load_user(user_id):
 if __name__ == '__main__':
     with app.app_context():
         from flightapp import admin
-
         app.run(debug=True)
