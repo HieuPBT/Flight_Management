@@ -3,74 +3,70 @@
 {% block title %}Trang chủ{% endblock %}
 
 {% block content %}
-<h1>Trang chu</h1>
-<div class="container text-center border">
-    <form>
-        <div>
-            <input class="form-check-input" type="radio" name="roundtrip" id="roundtrip" checked>
-            <label class="form-check-label" for="roundtrip">Khứ Hồi</label>
-            <input class="form-check-input" type="radio" name="roundtrip" id="oneway">
-            <label class="form-check-label" for="oneway">Một Chiều</label>
-        </div>
-        <div class="container text-center">
-            <div class="row align-items-start">
-                <div class="col">
-                    <label>Điểm đi:</label>
-                </div>
-                <div class="col">
-                    <select class="form-select" aria-label="Default select example">
-                        {% for i in SB %}
-                        <option>{{ i.tinh }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col">
-                    <label>Ngày đi:</label>
-                </div>
-                <div class="col">
-                    <input type="date" class="form-control" name="leavedate">
-                </div>
+<div class="container text-center shadow rounded mt-4">
+    <h1 class="text-primary">Tìm vé online</h1>
+    <form method="post" action="/search_flights" class="p-2" id="searchForm">
+        <div class="row align-items-center">
+            <div class="col col-md-2 col-sm-3 col-xs-3">
+                <label>Điểm đi:</label>
             </div>
-            <div class="row align-items-start">
-                <div class="col">
-                    <label>Điểm đến:</label>
-                </div>
-                <div class="col">
-                    <select class="form-select" aria-label="Default select example">
-                        {% for i in SB %}
-                        <option>{{ i.tinh }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col">
-                    <label>ngày về:</label>
-                </div>
-                <div class="col">
-                    <input type="date" class="form-control" name="returndate">
-                </div>
+            <div class="col col-md-4 col-9 mb-2">
+                <select class="form-select" aria-label="Default select example" name="departure" id="departure" required>
+                    {% for i in SB %}
+                    <option value="{{ i.id }}">{{ i.tinh }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="row align-items-start">
-                <div class="col">
-                    <label>Số lượng hành khách</label>
-                </div>
-                <div class="col">
-                    <input type="number" value="1" min="1" max="10" step="1">
-                </div>
-                <div class="col">
-                    <label>Hạng vé:</label>
-                </div>
-                <div class="col">
-                    <select class="form-select" aria-label="Default select example">
-
-                        {% for i in HV %}
-                        <Option>{{ i.ten }}</Option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="col col-md-2 col-3">
+                <label>Điểm đến:</label>
+            </div>
+            <div class="col col-md-4 col-9 mb-2">
+                <select class="form-select" aria-label="Default select example" name="destination" id="destination" required>
+                    {% for i in SB %}
+                    <option value="{{ i.id }}">{{ i.tinh }}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
-        <a class="btn btn-success" onclick="search_flight()">Tra Cứu</a>
+        <div class="row align-items-center">
+            <div class="col col-md-2 col-3">
+                <label>Ngày đi:</label>
+            </div>
+            <div class="col col-md-4 col-9 mb-2">
+                <input type="date" class="form-control" name="leave_date" required min="{{ to_day }}">
+            </div>
+            <div class="col col-md-2 col-3">
+                <label>Hạng vé:</label>
+            </div>
+            <div class="col col-md-4 col-9 mb-2">
+                <select class="form-select" aria-label="Default select example" name="ticket_class">
+                    {% for i in HV %}
+                    <option value="{{ i.id }}">{{ i.ten }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row align-items-center mb-2">
+            <div class="col col-md-2 col-3">
+                <label>Số lượng hành khách</label>
+            </div>
+            <div class="col col-md-4 col-9">
+                <input type="number" class="form-control" value="1" min="1" max="10" step="1" name="passengers">
+            </div>
+        </div>
+        <input type="submit" value="Tra cứu" class="btn btn-success">
     </form>
 </div>
+<script>
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+        var departure = document.getElementById('departure').value;
+        var destination = document.getElementById('destination').value;
 
+        if (departure === destination) {
+            event.preventDefault(); // Ngăn form submit
+            alert("Điểm đi và điểm đến không thể giống nhau.");
+            return false;
+        }
+    });
+</script>
 {% endblock %}

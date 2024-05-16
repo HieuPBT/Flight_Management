@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, url_for
 from flightapp import app, login, dao, configs
 from flask_login import login_user, logout_user, login_required
 from models import *
@@ -9,7 +9,8 @@ import json
 def index():
     SB = dao.load_airport()
     HV = dao.load_ticket_class()
-    return render_template('index.html', SB=SB, HV=HV)
+    to_day = datetime.now().date()
+    return render_template('index.html', SB=SB, HV=HV, to_day=to_day)
 
 
 @app.route('/api/create_flight_schedule', methods=['POST'])
@@ -62,15 +63,41 @@ def register():
     return render_template('auth/register.html')
 
 
-@app.route('/search_ticket')
-def search_ticket():
-    return render_template('ticket.html')
+@app.route('/search_flights', methods=['POST'])
+def search_flights():
+    passengers = request.form.get('passengers')
+    ticket_class = request.form.get('ticket_class')
+    departure = request.form.get('departure')
+    destination = request.form.get('destination')
+    leave_date = request.form.get('leave_date')
+    chuyen_bay_list = dao.get_available_flights(departure, destination, ticket_class, passengers, leave_date)
+    return render_template("flight_results.html", chuyen_bay_list=chuyen_bay_list, passengers_quantity=passengers)
+
+
+@app.route('/tickets_info')
+def tickets_info():
+    passengers_quantity = request.args.get('passengers_quantity')
+    hang_ve_chuyen_bay_id = request.args.get('hang_ve_chuyen_bay_id')
+    passengers_quantity = int(passengers_quantity)
+    hang_ve_chuyen_bay_id = int(hang_ve_chuyen_bay_id)
+    available_seats = dao.get_available_seats(hang_ve_chuyen_bay_id)
+    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats)
+
+
+@app.route('/add_tickets_info', methods=['POST'])
+def add_tickets_info():
+    for i in range(int(request.form['passengers_quantity'])):
+        print(int(request.form['selected_seats']))
+        # seat = dao.get_seat_plane(int(request.form['selected_seats'][i]), int(request.form['hang_ve_chuyen_bay_id'][i]))
+        # u = dao.add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
+        # dao.add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id)
+
+    return jsonify({'ok':'200'})
+
 
 
 @app.context_processor
 def common_attributes():
-
-    # value =
     return {
         'ticketclass': dao.load_ticket_class(),
         'plane': dao.load_plane(),
@@ -78,7 +105,7 @@ def common_attributes():
         'flight_route': dao.load_flight_route(),
         'maxinairport': dao.load_config(QuyDinhKey.MAXIMAIRPORT).value,
         'minstop': dao.load_config(QuyDinhKey.MINSTOP).value,
-        'nuticketclass': dao.load_config(QuyDinhKey.NUTICKETCLASS).value
+        'nuticketclass': dao.load_config(QuyDinhKey.NUTICKETCLASS).value,
     }
 
 

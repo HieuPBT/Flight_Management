@@ -2,17 +2,17 @@ from sqlalchemy import Column, String, Float, Integer, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import relationship
 from flightapp import db, app
 from flask_login import UserMixin
-from enum import Enum as RoleEnum
+from enum import Enum as enum
 from datetime import datetime
 
 
-class UserRole(RoleEnum):
+class UserRole(enum):
     USER = 1
     ADMIN = 2
     TICKET_SELLER = 3
 
 
-class QuyDinhKey(RoleEnum):
+class QuyDinhKey(enum):
     NUAIRPORT = "Số lượng sân bay"
     MINFLIGHT = "Thời gian bay tối thiểu"
     MAXIMAIRPORT = "Số lượng sân bay trung gian tối đa"
@@ -22,6 +22,15 @@ class QuyDinhKey(RoleEnum):
     BASEPRICE = "Đơn giá vé"
     SOLDTIME = "Thời gian bán vé"
     BOOKINGTIME = "Thời gian đặt vé"
+
+
+class Cot(enum):
+    A = 'A'
+    B = 'B'
+    C = 'C'
+    D = 'D'
+    E = 'E'
+    F = 'F'
 
 
 class Base(db.Model):
@@ -76,8 +85,13 @@ class TuyenBay(Base):
 
 
 class Ghe(Base):
-    ten = db.Column(db.String(5), nullable=False)
+    cot = Column(Enum(Cot), nullable=False)
+    hang = Column(Integer, nullable=False)
     ghe_may_bay = relationship('GheMayBay', backref='ghe', lazy=True)
+
+    __table_args__ = (
+        UniqueConstraint('cot', 'hang'),
+    )
 
 
 class MayBay(Base):
@@ -92,6 +106,7 @@ class MayBay(Base):
 class HangVe(Base):
     ten = Column(String(20), nullable=False)
     hang_ve_chuyen_bay = relationship('HangVeChuyenBay', backref='hang_ve', lazy=True)
+    ghe_may_bay = relationship('GheMayBay', backref='hang_ve', lazy=True)
 
     def __str__(self):
         return self.ten
@@ -123,6 +138,7 @@ class GheMayBay(Base):
     ghe_id = Column(Integer, ForeignKey('ghe.id'), nullable=False)
     may_bay_id = Column(Integer, ForeignKey('may_bay.id'), nullable=False)
     ve = relationship('Ve', backref='ghe_may_bay', lazy=True)
+    hang_ve_id = Column(Integer, ForeignKey('hang_ve.id'), nullable=False)
     __table_args__ = (
         UniqueConstraint('ghe_id', 'may_bay_id'),
     )
@@ -132,7 +148,7 @@ class Ve(Base):
     ghe_may_bay_id = Column(Integer, ForeignKey('ghe_may_bay.id'), nullable=False)
     hang_ve_chuyen_bay_id = Column(Integer, ForeignKey('hang_ve_chuyen_bay.id'), nullable=False)
     khach_hang_id = Column(Integer, ForeignKey('thong_tin_nguoi_dung.id'), nullable=False)
-    hoa_don_id = Column(Integer, ForeignKey('hoa_don.id'), nullable=False)
+    hoa_don_id = Column(Integer, ForeignKey('hoa_don.id'), nullable=True)
 
 
 class HoaDon(Base):
@@ -158,7 +174,7 @@ class QuyDinh(Base):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
+        #
         # import hashlib
         #
         #
@@ -191,48 +207,65 @@ if __name__ == '__main__':
         # db.session.commit()
         #
         # tb1 = TuyenBay(san_bay_di_id=5, san_bay_den_id=6)  # HCM - HN
-        # tb2 = TuyenBay(san_bay_di_id=5, san_bay_den_id=6)  # HN - HCM
+        # tb2 = TuyenBay(san_bay_di_id=6, san_bay_den_id=5)  # HN - HCM
         # tb3 = TuyenBay(san_bay_di_id=1, san_bay_den_id=2)  # Cà Mau - Cần Thơ
         # tb4 = TuyenBay(san_bay_di_id=9, san_bay_den_id=10)  # Hue - Nghệ An
         # db.session.add_all([tb1, tb2, tb3, tb4])
         #
         # db.session.commit()
-
+        #
+        # # Tạo danh sách ghế và máy bay
         # mb1 = MayBay(ten='BOE701')
         # mb2 = MayBay(ten='VietAir234')
         # mb3 = MayBay(ten='AirJet709')
+        # danh_sach_ghe = []
+        # danh_sach_may_bay = [mb1, mb2, mb3]
         #
-        # g1 = Ghe(ten='A01')
-        # g2 = Ghe(ten='A02')
-        # g3 = Ghe(ten='B01')
-        # g4 = Ghe(ten='C01')
-        # g5 = Ghe(ten='B02')
-        # g6 = Ghe(ten='A03')
+        # # Số hàng và số cột
+        # so_hang = 50
+        # so_cot = ['A', 'B', 'C', 'D', 'E', 'F']
         #
-        # db.session.add_all([mb1, mb2, mb3, g1, g2, g3, g4, g5, g6])
+        # # Tạo 300 ghế
+        # for hang in range(1, so_hang + 1):
+        #     for cot in so_cot:
+        #         ghe = Ghe(cot=Cot[cot], hang=hang)
+        #         danh_sach_ghe.append(ghe)
         #
+        # # Lưu trữ ghế vào cơ sở dữ liệu
+        # db.session.add_all(danh_sach_ghe)
+        # db.session.add_all(danh_sach_may_bay)
         # db.session.commit()
-
-        # g_mb1 = GheMayBay(ghe_id=1, may_bay_id=1)
-        # g_mb2 = GheMayBay(ghe_id=2, may_bay_id=1)
-        # g_mb3 = GheMayBay(ghe_id=3, may_bay_id=1)
-        # g_mb4 = GheMayBay(ghe_id=4, may_bay_id=1)
-        # g_mb5 = GheMayBay(ghe_id=5, may_bay_id=1)
-        # g_mb6 = GheMayBay(ghe_id=6, may_bay_id=1)
         #
-        # db.session.add_all([g_mb1, g_mb2, g_mb3, g_mb4, g_mb5, g_mb6])
-        #
-        # db.session.commit()
-
         # hv1 = HangVe(ten='Thương Gia')
         # hv2 = HangVe(ten='Phổ Thông')
         # hv3 = HangVe(ten='Tiết Kiệm')
         #
-        # cb1 = ChuyenBay(ngay_gio_khoi_hanh='2024-5-10', thoi_gian_bay=200, tuyen_bay_id=1,
-        #                 nhan_vien_quan_tri_id=1, may_bay_id=1)
-        #
-        # db.session.add_all([hv3])
+        # db.session.add_all([hv3, hv1, hv2])
         #
         # db.session.commit()
-
-
+        # # Thiết lập mối quan hệ giữa ghế và máy bay
+        # for i in danh_sach_may_bay:
+        #     for j in danh_sach_ghe:
+        #         if j.hang < 3:
+        #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv1.id)
+        #             db.session.add(ghe_may_bay)
+        #         else:
+        #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv2.id)
+        #             db.session.add(ghe_may_bay)
+        #
+        # db.session.commit()
+        #
+        #
+        # qd1 = QuyDinh(key=QuyDinhKey.NUAIRPORT, value=10, nhan_vien_quan_tri_id=1)
+        # qd2 = QuyDinh(key=QuyDinhKey.MINFLIGHT, value=30, nhan_vien_quan_tri_id=1)
+        # qd3 = QuyDinh(key=QuyDinhKey.MAXIMAIRPORT, value=3, nhan_vien_quan_tri_id=1)
+        # qd4 = QuyDinh(key=QuyDinhKey.MAXSTOP, value=30, nhan_vien_quan_tri_id=1)
+        # qd5 = QuyDinh(key=QuyDinhKey.MINSTOP, value=15, nhan_vien_quan_tri_id=1)
+        # qd6 = QuyDinh(key=QuyDinhKey.BASEPRICE, value=300000, nhan_vien_quan_tri_id=1)
+        # qd7 = QuyDinh(key=QuyDinhKey.BOOKINGTIME, value=720, nhan_vien_quan_tri_id=1)
+        # qd8 = QuyDinh(key=QuyDinhKey.SOLDTIME, value=240, nhan_vien_quan_tri_id=1)
+        # qd9 = QuyDinh(key=QuyDinhKey.NUTICKETCLASS, value=3, nhan_vien_quan_tri_id=1)
+        #
+        # db.session.add_all([qd1, qd2, qd3, qd4, qd5, qd6, qd7, qd8, qd9])
+        #
+        # db.session.commit()

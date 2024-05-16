@@ -1,0 +1,108 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+
+
+<div class="container mb-4">
+    <form class="border p-3 rounded m-4 mb-4 row " method="post" action="/add_tickets_info" onsubmit="return add_tickets(event);">
+        {% for i in range(passengers_quantity) %}
+        <h3 class="text-center text-primary">Nhập thông tin hành khách thứ {{ i + 1 }}</h3>
+            <div class="form-floating mb-2 col col-md-6 col-12">
+            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber_{{ i }}"
+                   placeholder="Số điện thoại">
+            <label for="phoneNumber">Số điện thoại</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="text" class="form-control" id="cccd" name="cccd_{{ i }}" placeholder="Căn Cước Công Dân">
+            <label for="cccd">Căn Cước Công Dân</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="text" class="form-control" id="name" name="name_{{ i }}" placeholder="Họ và tên">
+            <label for="name">Họ và tên</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="text" class="form-control" id="address" name="address_{{ i }}" placeholder="Địa chỉ">
+            <label for="cccd">Địa chỉ</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="email" class="form-control" id="email" name="email_{{ i }}" placeholder="Địa chỉ email">
+            <label for="email">Địa chỉ email</label>
+        </div>
+        <input type="hidden" id="passengers_quantity_hidden" name="passengers_quantity"
+               value="{{ passengers_quantity }}">
+        <input type="hidden" name="selected_seats" id="selectedSeatsInput">
+        <input type="hidden" name="hang_ve_chuyen_bay_id" value="{{ hang_ve_chuyen_bay_id }}">
+        {% endfor %}
+
+        <h2 class="text-primary text-center">Chọn {{ passengers_quantity }} ghế của quý khách</h2>
+        <div class="text-center">
+            {% for seat in available_seats %}
+            <button class="seat {% if seat.available %}available{% else %}occupied{% endif %}" id="{{ seat.id }}">{{
+                seat.cot.value }}{{ seat.hang }}
+            </button>
+            {% if loop.index % 6 == 0 %}<br>{% endif %}
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Xong</button>
+    </form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectedSeats = []; // Mảng để lưu trữ id của các ghế đã chọn
+
+        var buttons = document.querySelectorAll('.seat.available');
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                var seatId = this.getAttribute('id');
+                if (!this.classList.contains('occupied')) {
+                    // Kiểm tra xem số lượng ghế đã chọn có nhỏ hơn hoặc bằng số lượng hành khách hay không
+                    if (selectedSeats.length < {{ passengers_quantity }} || selectedSeats.includes(seatId)) {
+                        // Kiểm tra xem ghế đã được chọn hay chưa
+                        if (selectedSeats.includes(seatId)) {
+                            // Nếu ghế đã được chọn thì loại bỏ khỏi mảng
+                            var index = selectedSeats.indexOf(seatId);
+                            if (index !== -1) {
+                                selectedSeats.splice(index, 1);
+                                // Sau khi cập nhật selectedSeats, cập nhật giá trị của input hidden
+                                document.getElementById("selectedSeatsInput").value = selectedSeats;
+                            }
+                        } else {
+                            // Nếu ghế chưa được chọn thì thêm vào mảng
+                            selectedSeats.push(seatId);
+                            // Sau khi cập nhật selectedSeats, cập nhật giá trị của input hidden
+                            document.getElementById("selectedSeatsInput").value = selectedSeats;
+                        }
+                        // Thêm hoặc xóa class 'selected' tùy thuộc vào trạng thái ghế
+                        this.classList.toggle('selected');
+                    }
+                }
+            });
+        });
+    });
+    function add_tickets(event) {
+        if(selectedSeats.length !== {{ passengers_quantity }}) {
+            alert("Chưa chọn đủ ghế");
+            return;
+        }
+        event.preventDefault();
+        var formData = new FormData(document.querySelector('form'));
+        formData.append('selected_seats', JSON.stringify(selectedSeats));
+
+        fetch("/add_tickets_info", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
+
+{% endblock %}
