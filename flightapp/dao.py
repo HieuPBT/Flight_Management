@@ -19,6 +19,14 @@ def add_bill(transid, pmethod):
     return b
 
 
+def update_bill(orderId):
+    q = HoaDon.query.filter(HoaDon.ma_giao_dich.__eq__(orderId)).first()
+    q.trang_thai = PayStatus.PAID
+
+    db.session.add(q)
+    db.session.commit()
+
+
 def add_ticket(seat, ticket_class, user, bill):
     t = Ve(ghe_may_bay_id=seat, hang_ve_chuyen_bay_id=ticket_class, khach_hang_id=user, hoa_don_id=bill)
 
@@ -104,9 +112,9 @@ def get_available_flights(departure, destination, ticket_class, passengers, leav
 
     current_time = datetime.now()
     cutoff_time = current_time - timedelta(minutes=
-                                           load_config(QuyDinhKey.SOLDTIME).value
-                                           if current_user.user_role == UserRole.TICKET_SELLER
-                                           else load_config(QuyDinhKey.BOOKINGTIME).value)
+                                           load_config(QuyDinhKey.BOOKINGTIME).value
+                                           if current_user.is_anonymous or current_user.user_role in [UserRole.USER]
+                                           else load_config(QuyDinhKey.SOLDTIME).value)
 
     print(cutoff_time)
 

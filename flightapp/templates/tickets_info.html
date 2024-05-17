@@ -63,9 +63,9 @@
             {% if loop.index % 6 == 0 %}<br>{% endif %}
             {% endfor %}
         </div>
-<!--        <button type="submit" class="btn btn-primary">Thanh Toán</button>-->
+        <button type="submit" class="btn btn-primary">Thanh Toán</button>
 <!--        <h1>test {{(total_price|string)}}</h1>-->
-        <a href="javascript:;" type="submit" onclick="momoPay({{total_price}})" class="btn btn-danger">Thanh Toán</a>
+<!--        <a href="javascript:;" type="submit" onclick="zaloPay({{total_price}})" class="btn btn-danger">Thanh Toán</a>-->
     </form>
 </div>
 <script>
@@ -114,6 +114,8 @@
             return;
         }
         event.preventDefault();
+
+
         var formData = new FormData(document.querySelector('form'));
         formData.append('selected_seats', JSON.stringify(selectedSeats));
 
