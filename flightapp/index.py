@@ -86,14 +86,28 @@ def tickets_info():
 
 @app.route('/add_tickets_info', methods=['POST'])
 def add_tickets_info():
+    string_numbers = request.form['selected_seats']
+    selected_seats = string_numbers.split(",")
+
+    # Chuyển đổi các phần tử từ chuỗi sang số nguyên
+    numbers = list(map(int, selected_seats))
     for i in range(int(request.form['passengers_quantity'])):
-        print(int(request.form['selected_seats']))
-        # seat = dao.get_seat_plane(int(request.form['selected_seats'][i]), int(request.form['hang_ve_chuyen_bay_id'][i]))
-        # u = dao.add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
-        # dao.add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id)
+        seat = dao.get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id'] ))
+        u = dao.add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
+        dao.add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id)
 
     return jsonify({'ok':'200'})
 
+
+@app.route('/admin/update_stats', methods=['POST'])
+def update_stats():
+    month = request.json['month']
+    year = request.json['year']
+    revenue_by_route = dao.stats_route_revenue(year, month)
+    total = 0
+    for i in revenue_by_route:
+        total += i[2]
+    return jsonify({"revenue_by_route":revenue_by_route, "total":total})
 
 
 @app.context_processor

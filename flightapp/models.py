@@ -149,6 +149,9 @@ class Ve(Base):
     hang_ve_chuyen_bay_id = Column(Integer, ForeignKey('hang_ve_chuyen_bay.id'), nullable=False)
     khach_hang_id = Column(Integer, ForeignKey('thong_tin_nguoi_dung.id'), nullable=False)
     hoa_don_id = Column(Integer, ForeignKey('hoa_don.id'), nullable=True)
+    __table_args__ = (
+        UniqueConstraint('ghe_may_bay_id', 'hang_ve_chuyen_bay_id'),
+    )
 
 
 class HoaDon(Base):

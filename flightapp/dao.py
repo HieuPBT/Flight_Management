@@ -135,8 +135,58 @@ def add_user_info(name, phone_number, address, identity, email):
         return info
 
 
-def add_ticket(ghe_may_bay_id, hang_ve_chuyen_bay_id, khach_hang_id):
-    pass
+def get_route_by_id(route_id):
+    return TuyenBay.query.get(route_id)
+
+
+def stats_flight_revenue_by_route_id(route_id):
+    return (db.session.query(ChuyenBay, HangVeChuyenBay.gia * func.count(Ve.id), func.count(ChuyenBay.id))
+            .join(Ve, Ve.hang_ve_chuyen_bay_id.__eq__(HangVeChuyenBay.id), isouter=True)
+            .join(ChuyenBay, ChuyenBay.id.__eq__(HangVeChuyenBay.chuyen_bay_id))
+            .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))
+            .group_by(HangVeChuyenBay.chuyen_bay_id, HangVeChuyenBay.gia).filter(TuyenBay.id.__eq__(route_id)).all())
+
+
+def stats_route_revenue(year=datetime.now().year, month=datetime.now().month):
+    subquery = (db.session
+                .query(TuyenBay.id.label('tuyen_bay_id'), (HangVeChuyenBay.gia * func.count(Ve.id)).label('total_price'))
+                .join(Ve, Ve.hang_ve_chuyen_bay_id.__eq__(HangVeChuyenBay.id), isouter=True)
+                .join(ChuyenBay, ChuyenBay.id.__eq__(HangVeChuyenBay.chuyen_bay_id))
+                .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))
+                .group_by(TuyenBay.id, HangVeChuyenBay.gia)
+                .filter(func.extract('year', ChuyenBay.created_date).__eq__(year))
+                .filter(func.extract('month', ChuyenBay.created_date).__eq__(month))
+                .subquery())
+
+    query = (db.session.query(subquery.c.tuyen_bay_id, func.sum(subquery.c.total_price))
+             .group_by(subquery.c.tuyen_bay_id)
+             .all())
+    modified_results = []
+    for q in query:
+        tuyen_bay_id = q[0]
+        total_price = q[1]
+        route = get_route_by_id(tuyen_bay_id)
+        modified_results.append((route, total_price))
+    flight_counts = (db.session.query(TuyenBay.id, func.count(ChuyenBay.id))
+                     .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))
+                     .group_by(TuyenBay.id)
+                     .all())
+
+    merged_results = []
+    for tuyen_bay_id, flight_count in flight_counts:
+        for route, total_price in modified_results:
+            if route.id == tuyen_bay_id:
+                merged_results.append((route.id, str(route), total_price, flight_count))
+                break
+
+    return merged_results
+
+
+def stats_route_flight_count():
+    return (db.session.query(TuyenBay.id, func.count(ChuyenBay.id))
+            .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))).group_by(TuyenBay.id).all()
+
+# def stats_
 
 
 def add_user(name, username, password, avatar):
@@ -154,4 +204,4 @@ def auth_user(username, password):
 
 if __name__ == '__main__':
     with app.app_context():
-        print(get_seat_plane(2, 3))
+        print(stats_route_revenue(2024, 5))

@@ -1,9 +1,11 @@
-from flask import redirect
+from datetime import date
+
+from flask import redirect, request
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.model import InlineFormAdmin
 from flask_login import logout_user, login_required, login_user, current_user
-from flightapp import app, db
+from flightapp import app, db, dao
 from models import *
 
 
@@ -61,7 +63,11 @@ class StatsView(BaseView):
     @login_required
     @expose('/')
     def index(self):
-        return self.render('admin/stats.html')
+        revenue_by_route = dao.stats_route_revenue()
+        total = 0
+        for i in revenue_by_route:
+            total += i[2]
+        return self.render('admin/stats.html', revenue_by_route=revenue_by_route, total=total)
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.user_role == UserRole.ADMIN

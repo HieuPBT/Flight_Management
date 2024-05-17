@@ -8,7 +8,7 @@
 <div class="container mb-4">
     <form class="border p-3 rounded m-4 mb-4 row " method="post" action="/add_tickets_info" onsubmit="return add_tickets(event);">
         {% for i in range(passengers_quantity) %}
-        <h3 class="text-center text-primary">Nhập thông tin hành khách thứ {{ i + 1 }}</h3>
+        <h3 class="text-center text-primary">Nhập thông tin hành khách {% if passengers_quantity > 1 %}thứ {{ i + 1 }} {% else %}{% endif %}</h3>
             <div class="form-floating mb-2 col col-md-6 col-12">
             <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber_{{ i }}"
                    placeholder="Số điện thoại">
@@ -36,7 +36,7 @@
         <input type="hidden" name="hang_ve_chuyen_bay_id" value="{{ hang_ve_chuyen_bay_id }}">
         {% endfor %}
 
-        <h2 class="text-primary text-center">Chọn {{ passengers_quantity }} ghế của quý khách</h2>
+        <h2 class="text-primary text-center">Chọn {% if passengers_quantity > 1 %}{{ passengers_quantity }}{% else %}{% endif %} ghế của quý khách</h2>
         <div class="text-center">
             {% for seat in available_seats %}
             <button class="seat {% if seat.available %}available{% else %}occupied{% endif %}" id="{{ seat.id }}">{{
@@ -53,6 +53,12 @@
         var selectedSeats = []; // Mảng để lưu trữ id của các ghế đã chọn
 
         var buttons = document.querySelectorAll('.seat.available');
+        var buttonsDisabled = document.querySelectorAll('.seat.occupied');
+        buttonsDisabled.forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+            });
+        });
         buttons.forEach(function(button) {
             button.addEventListener('click', function(event) {
                 event.preventDefault();
