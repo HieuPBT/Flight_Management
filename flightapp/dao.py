@@ -37,8 +37,17 @@ def add_ti():
     print(f)
 
 
-# def add_tickets_info(orderId, partnerCode):
+def add_tickets_info(orderId, partnerCode):
+    string_numbers = request.form['selected_seats']
+    selected_seats = string_numbers.split(",")
 
+    # Chuyển đổi các phần tử từ chuỗi sang số nguyên
+    numbers = list(map(int, selected_seats))
+    b = add_bill(orderId, partnerCode)
+    for i in range(int(request.form['passengers_quantity'])):
+        seat = get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id'] ))
+        u = add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
+        add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id, bill=b.id)
 
 
 def add_flight_schedule(depart, depart_date_time, flight_duration, plane, ticket_class_data, im_airport):
@@ -153,10 +162,10 @@ def get_seat_plane(ghe_id, hang_ve_chuyen_bay_id):
             .filter(GheMayBay.ghe_id.__eq__(ghe_id) & HangVeChuyenBay.id.__eq__(hang_ve_chuyen_bay_id)).first())
 
 
-# def add_ticket(ghe_may_bay_id, hang_ve_chuyen_bay_id, khach_hang_id):
-#     ticket = Ve(ghe_may_bay_id=ghe_may_bay_id, hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, khach_hang_id=khach_hang_id)
-#     db.session.add(ticket)
-#     db.session.commit()
+def add_ticket(ghe_may_bay_id, hang_ve_chuyen_bay_id, khach_hang_id):
+    ticket = Ve(ghe_may_bay_id=ghe_may_bay_id, hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, khach_hang_id=khach_hang_id)
+    db.session.add(ticket)
+    db.session.commit()
 
 
 def get_info(identity=None, phone_number=None):
@@ -269,4 +278,4 @@ def auth_user(username, password):
 
 if __name__ == '__main__':
     with app.app_context():
-        print(get_acc('admin'))
+        print(stats_route_revenue(2024, 5))

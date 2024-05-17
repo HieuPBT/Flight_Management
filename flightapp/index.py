@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for, session, g
 from flightapp import app, login, dao, configs
+from flask import Flask, render_template, request, redirect, jsonify, url_for, session, signals
+from flightapp import app, login, dao, configs, mail
 from flask_login import login_user, logout_user, login_required
-
+from flask_mail import Message
 from flightapp.decorators import loggedin
 from models import *
 import json
@@ -9,6 +11,9 @@ import uuid
 import requests
 import hmac
 import hashlib
+import random
+from time import time
+from datetime import datetime
 
 
 @app.route('/')
@@ -16,6 +21,9 @@ def index():
     SB = dao.load_airport()
     HV = dao.load_ticket_class()
     to_day = datetime.now().date()
+    msg = Message(subject="Trang Chu", sender=('test', '2151013204hieu@ou.edu.vn'), recipients=['2151013052loc@gmail.com'])
+    msg.body = "Dat ve Online"
+    mail.send(msg)
     return render_template('index.html', SB=SB, HV=HV, to_day=to_day)
 
 
@@ -35,9 +43,9 @@ def create_flight_schedule():
             dao.add_flight_schedule(depart, depart_date_time, flight_duration, plane, tickets_data, im_airport)
         except Exception as ex:
             print(ex)
-            return jsonify({'status': 500})
+            return redirect('/admin/chuyenbay/')
         else:
-            return jsonify({'status': 200})
+            return redirect('/admin/chuyenbay/')
 
     # return jsonify({'depart': depart,
     #                 'depart_date_time': depart_date_time,
@@ -191,8 +199,8 @@ def momo_pay():
     orderInfo = "pay with MoMo"
     requestType = "captureWallet"
     extraData = ""
-    redirectUrl = "https://aa6b-2001-ee0-4f81-ab80-c5f-532a-a27d-6721.ngrok-free.app"
-    ipnUrl = "https://aa6b-2001-ee0-4f81-ab80-c5f-532a-a27d-6721.ngrok-free.app/api/momo-pay/ipn"
+    redirectUrl = "https://6757-171-243-48-141.ngrok-free.app/"
+    ipnUrl = "https://6757-171-243-48-141.ngrok-free.app/api/momo-pay/ipn"
     rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType
     h = hmac.new(bytes(secretKey, 'ascii'), bytes(rawSignature, 'ascii'), hashlib.sha256)
     signature = h.hexdigest()
@@ -237,7 +245,6 @@ def momo_pay():
 
 @app.route('/api/momo-pay/ipn', methods=['POST'])
 def momo_ipn():
-    print("ok_ipne")
     data = json.loads(request.get_data(as_text=True))
     print(data)
     result_code = data["resultCode"]
@@ -245,13 +252,89 @@ def momo_ipn():
 
     if result_code != 0:
         return jsonify({'error': "Thanh toán thất bại",
-            'status': 400})
+                        'status': 400})
 
     try:
         dao.update_invoices(orderId)
         return jsonify({'status': 200})
     except Exception as e:
         return jsonify({'status': 500, 'error': str(e)})
+
+
+@app.route('/api/zalo-pay', methods=['POST'])
+def zalo_pay():
+    endpoint = "https://sb-openapi.zalopay.vn/v2/create"
+    appid = 2553
+    key1 = "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL"
+    appuser = "user123"
+    transID = random.randrange(1000000)
+    apptime = int(round(time() * 1000))  # miliseconds
+    app_trans_id = "{:%y%m%d}_{}".format(datetime.today(), transID)
+    embeddata = json.dumps({"redirecturl": "https://546f-171-243-48-141.ngrok-free.app/"})
+    item = json.dumps([{}])
+    amount = 400000
+    callback_url = "https://546f-171-243-48-141.ngrok-free.app/api/zalo-pay/callback"
+
+    # Tạo chuỗi dữ liệu theo định dạng yêu cầu
+    raw_data = "{}|{}|{}|{}|{}|{}|{}".format(appid, app_trans_id, appuser, amount, apptime, embeddata, item)
+
+    # Tính toán MAC bằng cách sử dụng HMAC
+    mac = hmac.new(key1.encode(), raw_data.encode(), hashlib.sha256).hexdigest()
+
+    # Dữ liệu gửi đi
+    data = {
+        "app_id": appid,
+        "app_user": appuser,
+        "app_time": apptime,
+        "amount": amount,
+        "app_trans_id": app_trans_id,
+        "embed_data": embeddata,
+        "item": item,
+        "description": "Lazada - Payment for the order #" + str(transID),
+        "bank_code": "zalopayapp",
+        "mac": mac,
+        "callback_url": callback_url
+    }
+
+    # Gửi yêu cầu tạo
+    response = requests.post(url=endpoint, data=data)
+
+    if response.status_code == 200:
+        response_data = response.json()
+        print(response_data)
+        return jsonify({'ok': '200', 'order_url': response_data.get('order_url')})
+    else:
+        return jsonify({'error': 'Invalid request method'}), 400
+
+
+@app.route('/api/zalo-pay/callback', methods=['POST'])
+def callback():
+    result = {}
+    key2 = "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz"
+    try:
+        cbdata = request.json
+        mac = hmac.new(key2.encode(), cbdata['data'].encode(), hashlib.sha256).hexdigest()
+
+        # kiểm tra callback hợp lệ (đến từ ZaloPay server)
+        if mac != cbdata['mac']:
+            # callback không hợp lệ
+            result['returncode'] = -1
+            result['returnmessage'] = 'mac not equal'
+        else:
+            # thanh toán thành công
+            # merchant cập nhật trạng thái cho đơn hàng
+            dataJson = json.loads(cbdata['data'])
+            print("update order's status = success where apptransid = " + dataJson['apptransid'])
+
+            result['returncode'] = 1
+            result['returnmessage'] = 'success'
+    except Exception as e:
+        result['returncode'] = 0  # ZaloPay server sẽ callback lại (tối đa 3 lần)
+        result['returnmessage'] = str(e)
+
+    # thông báo kết quả cho ZaloPay server
+    print(result)
+    return jsonify(result)
 
 
 @app.context_processor

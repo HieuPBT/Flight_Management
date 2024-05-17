@@ -27,7 +27,7 @@ function momoPay(total) {
 function zaloPay(total) {
     var totals = total;
     console.log("zalopay");
-    fetch('/api/momo-pay', {
+    fetch('/api/zalo-pay', {
         method: "POST",
         body: JSON.stringify({
             "total": totals
@@ -39,10 +39,10 @@ function zaloPay(total) {
     .then(response => response.json())
     .then(data => {
         console.log('Success:', data);
-        if (data.payUrl) {
-            window.location.href = data.payUrl;
+        if (data.order_url) {
+            window.location.href = data.order_url;
         } else {
-            console.error('payUrl not found in response');
+            console.error('order_url not found in response');
         }
     })
     .catch(error => {

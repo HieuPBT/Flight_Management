@@ -109,6 +109,10 @@
         });
     });
     function add_tickets(event) {
+        if(selectedSeats.length !== {{ passengers_quantity }}) {
+            alert("Chưa chọn đủ ghế");
+            return;
+        }
         event.preventDefault();
         console.log('ok')
         var passengerForm = document.getElementById('passengerForm');

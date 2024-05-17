@@ -23,9 +23,6 @@ class QuyDinhKey(enum):
     SOLDTIME = "Thời gian bán vé"
     BOOKINGTIME = "Thời gian đặt vé"
 
-    def __str__(self):
-        return self.name
-
 
 class Cot(enum):
     A = 'A'
@@ -211,15 +208,6 @@ if __name__ == '__main__':
         # info2 = ThongTinNguoiDung(ho_va_ten="Nguyễn Xuân Lộc", so_dien_thoai='0362655091', dia_chi='Gia Lai',
         #                           email='2151013052loc@gmail.com', CCCD='0798723983792')
         # db.session.add_all([info, info2])  # Add and commit information first
-        # db.session.commit()
-        # u2 = User(username='admin2',
-        #          password=str(hashlib.md5("123456".encode('utf-8')).hexdigest()),
-        #          user_role=UserRole.ADMIN)  # Use the ID of the created record
-        # db.session.add(u2)
-        # db.session.commit()
-        #
-        # info3 = ThongTinNguoiDung(ho_va_ten="admin2", tai_khoan_id=2)
-        # db.session.add_all([info3])  # Add and commit information first
         # db.session.commit()
         #
         # sb1 = SanBay(ten='Cà Mau', tinh='Cà Mau')
