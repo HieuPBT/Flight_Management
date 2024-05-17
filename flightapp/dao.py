@@ -1,10 +1,50 @@
 from datetime import timedelta
 
+from flask import request, session
+
 from models import *
 from flask_login import current_user
 import hashlib
 from sqlalchemy import func
 from flightapp import utils
+
+
+def add_bill(transid, pmethod):
+    b = HoaDon(ma_giao_dich=transid, phuong_thuc_giao_dich=pmethod)
+
+    db.session.add(b)
+
+    db.session.commit()
+
+    return b
+
+
+def add_ticket(seat, ticket_class, user, bill):
+    t = Ve(ghe_may_bay_id=seat, hang_ve_chuyen_bay_id=ticket_class, khach_hang_id=user, hoa_don_id=bill)
+
+    db.session.add(t)
+
+    db.session.commit()
+
+    return t
+
+
+def add_ti():
+    f = session.get('form_data')
+    print(f)
+
+
+def add_tickets_info(orderId, partnerCode):
+    string_numbers = request.form['selected_seats']
+    selected_seats = string_numbers.split(",")
+
+    # Chuyển đổi các phần tử từ chuỗi sang số nguyên
+    numbers = list(map(int, selected_seats))
+    b = add_bill(orderId, partnerCode)
+    for i in range(int(request.form['passengers_quantity'])):
+        seat = get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id'] ))
+        u = add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
+        add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id, bill=b.id)
 
 
 def add_flight_schedule(depart, depart_date_time, flight_duration, plane, ticket_class_data, im_airport):

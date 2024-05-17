@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for
+from flask import Flask, render_template, request, redirect, jsonify, url_for, session
 from flightapp import app, login, dao, configs
 from flask_login import login_user, logout_user, login_required
 from models import *
 import json
+import uuid
+import requests
+import hmac
+import hashlib
 
 
 @app.route('/')
@@ -78,10 +82,11 @@ def search_flights():
 def tickets_info():
     passengers_quantity = request.args.get('passengers_quantity')
     hang_ve_chuyen_bay_id = request.args.get('hang_ve_chuyen_bay_id')
+    total_price = request.args.get('total_price')
     passengers_quantity = int(passengers_quantity)
     hang_ve_chuyen_bay_id = int(hang_ve_chuyen_bay_id)
     available_seats = dao.get_available_seats(hang_ve_chuyen_bay_id)
-    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats)
+    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats, total_price=int(total_price)*passengers_quantity)
 
 
 @app.route('/add_tickets_info', methods=['POST'])
@@ -108,6 +113,81 @@ def update_stats():
     for i in revenue_by_route:
         total += i[2]
     return jsonify({"revenue_by_route":revenue_by_route, "total":total})
+
+
+@app.route('/api/momo-pay', methods=['POST'])
+def momo_pay():
+    endpoint = "https://test-payment.momo.vn/v2/gateway/api/create"
+    partnerCode = "MOMO"
+    accessKey = "F8BBA842ECF85"
+    secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
+    requestId = str(uuid.uuid4())
+    amount = str((request.json.get('total')))
+    print(amount)
+    orderId = str(uuid.uuid4())
+    # orderId = total.get('appointment_id')+total.get('user_id')+total.get('booking_date')
+    orderInfo = "pay with MoMo"
+    requestType = "captureWallet"
+    extraData = ""
+    redirectUrl = "https://6757-171-243-48-141.ngrok-free.app/"
+    ipnUrl = "https://6757-171-243-48-141.ngrok-free.app/api/momo-pay/ipn"
+    rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType
+    h = hmac.new(bytes(secretKey, 'ascii'), bytes(rawSignature, 'ascii'), hashlib.sha256)
+    signature = h.hexdigest()
+    data = {
+        'partnerCode': partnerCode,
+        'partnerName': "Vé Máy Bay Giá Rẻ",
+        'requestId': requestId,
+        'amount': amount,
+        'orderId': orderId,
+        'orderInfo': orderInfo,
+        'redirectUrl': redirectUrl,
+        'ipnUrl': ipnUrl,
+        'lang': "vi",
+        'extraData': extraData,
+        'requestType': requestType,
+        'signature': signature
+    }
+
+    data = json.dumps(data)
+
+    clen = len(data)
+    response = requests.post(endpoint, data=data,
+                             headers={'Content-Type': 'application/json', 'Content-Length': str(clen)})
+    if response.status_code == 200:
+        data1 = request.json
+        print(data1)
+        response_data = response.json()
+        # string_numbers = session.get('selected_seats')
+        # print(string_numbers)
+        #dao.add_tickets_info(orderId, partnerCode)
+
+        print(response.json())
+        return jsonify({'ok': '200',
+                        'payUrl': response_data.get('payUrl')})
+        # return redirect(response_data.get('payUrl'))
+
+    else:
+        print(response.json())
+        return jsonify({'error': 'Invalid request method'})
+
+
+@app.route('/api/momo-pay/ipn', methods=['POST'])
+def momo_ipn():
+    data = json.loads(request.get_data(as_text=True))
+    print(data)
+    result_code = data["resultCode"]
+    orderId = data['orderId']
+
+    if result_code != 0:
+        return jsonify({'error': "Thanh toán thất bại",
+            'status': 400})
+
+    try:
+        dao.update_bill(orderId)
+        return jsonify({'status': 200})
+    except Exception as e:
+        return jsonify({'status': 500, 'error': str(e)})
 
 
 @app.context_processor

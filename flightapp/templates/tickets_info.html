@@ -6,10 +6,12 @@
 
 
 <div class="container mb-4">
-    <form class="border p-3 rounded m-4 mb-4 row " method="post" action="/add_tickets_info" onsubmit="return add_tickets(event);">
+    <form class="border p-3 rounded m-4 mb-4 row " id="passengerForm"
+          onsubmit="return add_tickets(event);">
         {% for i in range(passengers_quantity) %}
-        <h3 class="text-center text-primary">Nhập thông tin hành khách {% if passengers_quantity > 1 %}thứ {{ i + 1 }} {% else %}{% endif %}</h3>
-            <div class="form-floating mb-2 col col-md-6 col-12">
+        <h3 class="text-center text-primary">Nhập thông tin hành khách {% if passengers_quantity > 1 %}thứ {{ i + 1 }}
+            {% else %}{% endif %}</h3>
+        <div class="form-floating mb-2 col col-md-6 col-12">
             <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber_{{ i }}"
                    placeholder="Số điện thoại">
             <label for="phoneNumber">Số điện thoại</label>
@@ -36,7 +38,23 @@
         <input type="hidden" name="hang_ve_chuyen_bay_id" value="{{ hang_ve_chuyen_bay_id }}">
         {% endfor %}
 
-        <h2 class="text-primary text-center">Chọn {% if passengers_quantity > 1 %}{{ passengers_quantity }}{% else %}{% endif %} ghế của quý khách</h2>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="payMethod" id="momo" value="MOMO" checked>
+                <label class="form-check-label">
+                    MOMO
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="payMethod" id="zalo" value="ZALOPAY">
+                <label class="form-check-label">
+                    ZALOPAY
+                </label>
+            </div>
+        </div>
+
+        <h2 class="text-primary text-center">Chọn {% if passengers_quantity > 1 %}{{ passengers_quantity }}{% else %}{%
+            endif %} ghế của quý khách</h2>
         <div class="text-center">
             {% for seat in available_seats %}
             <button class="seat {% if seat.available %}available{% else %}occupied{% endif %}" id="{{ seat.id }}">{{
@@ -45,7 +63,9 @@
             {% if loop.index % 6 == 0 %}<br>{% endif %}
             {% endfor %}
         </div>
-        <button type="submit" class="btn btn-primary">Xong</button>
+<!--        <button type="submit" class="btn btn-primary">Thanh Toán</button>-->
+<!--        <h1>test {{(total_price|string)}}</h1>-->
+        <a href="javascript:;" type="submit" onclick="momoPay({{total_price}})" class="btn btn-danger">Thanh Toán</a>
     </form>
 </div>
 <script>
@@ -88,27 +108,31 @@
             });
         });
     });
-    function add_tickets(event) {
-        if(selectedSeats.length !== {{ passengers_quantity }}) {
-            alert("Chưa chọn đủ ghế");
-            return;
-        }
-        event.preventDefault();
-        var formData = new FormData(document.querySelector('form'));
-        formData.append('selected_seats', JSON.stringify(selectedSeats));
+<!--    function add_tickets(event) {-->
+<!--&lt;!&ndash;        if(selectedSeats.length !== {{ passengers_quantity }}) {&ndash;&gt;-->
+<!--&lt;!&ndash;            alert("Chưa chọn đủ ghế");&ndash;&gt;-->
+<!--&lt;!&ndash;            return;&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+<!--&lt;!&ndash;        event.preventDefault();&ndash;&gt;-->
+<!--&lt;!&ndash;        var formData = new FormData(document.querySelector('form'));&ndash;&gt;-->
+<!--&lt;!&ndash;        formData.append('selected_seats', JSON.stringify(selectedSeats));&ndash;&gt;-->
 
-        fetch("/add_tickets_info", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
+<!--&lt;!&ndash;        fetch("/add_tickets_info", {&ndash;&gt;-->
+<!--&lt;!&ndash;            method: "POST",&ndash;&gt;-->
+<!--&lt;!&ndash;            body: formData&ndash;&gt;-->
+<!--&lt;!&ndash;        })&ndash;&gt;-->
+<!--&lt;!&ndash;        .then(response => response.json())&ndash;&gt;-->
+<!--&lt;!&ndash;        .then(data => {&ndash;&gt;-->
+<!--&lt;!&ndash;            console.log(data);&ndash;&gt;-->
+<!--&lt;!&ndash;        })&ndash;&gt;-->
+<!--&lt;!&ndash;        .catch(error => {&ndash;&gt;-->
+<!--&lt;!&ndash;            console.error('Error:', error);&ndash;&gt;-->
+<!--&lt;!&ndash;        });&ndash;&gt;-->
+<!--        event.preventDefault()-->
+<!--    }-->
 </script>
+
+
+<script src="{{ url_for('static', filename='js/pay.js') }}"></script>
 
 {% endblock %}
