@@ -23,7 +23,7 @@
                     <h6 class="card-text col-6 text-start">Hạng: {{ c[3] }}</h6>
                     <p class="card-text text-danger col-6 text-end">Giá: {{ c[1] }} VNĐ</p>
                 </div>
-                <a href="{{ url_for('tickets_info', passengers_quantity=passengers_quantity, hang_ve_chuyen_bay_id=c[5]) }}" class="btn btn-primary text-end">Đặt vé</a>
+                <a href="{{ url_for('tickets_info', price=c[1], passengers_quantity=passengers_quantity, hang_ve_chuyen_bay_id=c[5]) }}" class="btn btn-primary text-end">Đặt vé</a>
             </div>
         </div>
         </div>

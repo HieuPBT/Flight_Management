@@ -1,13 +1,13 @@
 {% extends 'admin/master.html' %}
 {% block body %}
 
-<div class="container border border-dark p-4 shadow-lg">
+<div class="container rounded shadow-lg">
     <form action="/api/create_flight_schedule" method="POST">
-        <h1 class="mt-1 mb-5 text-center">lập Lịch Chuyến Bay</h1>
+        <h1 class="mt-1 mb-5 text-center text-info">lập Lịch Chuyến Bay</h1>
         <div class="row justify-content-center">
             <div class="col-md-6 mb-2 mt-2">
                 <label class="form-label">Tuyến bay:</label>
-                <select class="form-select form-select-lg mb-3" name="depart" aria-label=".form-select-lg example" required >
+                <select class="form-control mb-3" name="depart" aria-label=".form-select-lg example" required >
                     <option value="" selected disabled>Tuyến bay</option>
                     {% for i in flight_route %}
                     <option value="{{ i.id }}">{{ i }}</option>
@@ -17,7 +17,7 @@
 
             <div class="col-md-6 mb-2 mt-2">
                 <label class="form-label">Máy bay:</label>
-                <select class="form-select form-select-lg mb-3" name="plane" aria-label=".form-select-lg example" required >
+                <select class="form-control mb-3" name="plane" aria-label=".form-select-lg example" required >
                     <option value="" selected disabled>Máy bay</option>
                     {% for i in plane %}
                     <option value="{{ i.id }}">{{ i }}</option>
@@ -42,7 +42,7 @@
         <div class="row">
             <div class="col-md-6 mb-2 mt-2">
                 <label class="form-label">Hạng ghế</label>
-                <select class="form-select form-select-lg" id="ticket_class" required >
+                <select class="form-control" id="ticket_class" required >
                     <option value="" selected disabled>Hạng ghế</option>
                     {% for i in ticketclass %}
                     <option value="{{ i.id }}">{{ i }}</option>
@@ -131,17 +131,18 @@
 
                 if (!existingTicket) {
                     const ticketItem = `
-                        <div class="row mt-3 ticket-row" data-ticket-class="${ticketClass}">
-                            <div class="col-md-4">
+                        <div class="row m-2 ticket-row" data-ticket-class="${ticketClass}">
+                            <div class="col-md-3">
                                 <input type="text" class="form-control" value="${ticketClass}" readonly>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="number" class="form-control ticket-quantity" value="${quantity}" readonly>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="number" class="form-control ticket-price" value="${ticketPrice}" readonly>
-                            <div class="col-md-4 align-self-end">
-                                <button type="button" class="btn btn-danger" onclick="removeTicket(this)">Remove</button>
+                            </div>
+                            <div class="col-md-3 align-self-end">
+                                <button type="button" class="btn btn-danger" onclick="removeTicket(this)">Xóa</button>
                             </div>
                         </div>
                     `;
@@ -189,7 +190,7 @@
                 <tr>
                     <td>${i}</td>
                     <td>
-                        <select class="form-select" id="imairport_${i}" aria-label="Default select example">
+                        <select class="form-control" id="imairport_${i}" aria-label="Default select example">
                             <option value="" selected disabled>Sân bay trung gian</option>
                             <!-- Lặp qua danh sách sân bay và tạo các option -->
                             {% for i in airport %}

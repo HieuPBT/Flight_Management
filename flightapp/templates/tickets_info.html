@@ -35,7 +35,7 @@
         <input type="hidden" name="selected_seats" id="selectedSeatsInput">
         <input type="hidden" name="hang_ve_chuyen_bay_id" value="{{ hang_ve_chuyen_bay_id }}">
         {% endfor %}
-
+        <h1>{{ total_price }}</h1>
         <h2 class="text-primary text-center">Chọn {% if passengers_quantity > 1 %}{{ passengers_quantity }}{% else %}{% endif %} ghế của quý khách</h2>
         <div class="text-center">
             {% for seat in available_seats %}
@@ -45,6 +45,7 @@
             {% if loop.index % 6 == 0 %}<br>{% endif %}
             {% endfor %}
         </div>
+        <h1>{{total}}</h1>
         <button type="submit" class="btn btn-primary">Xong</button>
     </form>
 </div>

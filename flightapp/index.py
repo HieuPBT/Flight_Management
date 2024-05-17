@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for
 from flightapp import app, login, dao, configs
 from flask_login import login_user, logout_user, login_required
+
+from flightapp.decorators import loggedin
 from models import *
 import json
 
@@ -58,9 +60,53 @@ def login_admin():
     return redirect('/admin')
 
 
-@app.route('/register')
-def register():
-    return render_template('auth/register.html')
+@loggedin
+@app.route('/register', methods=['POST', 'GET'])
+def register_user():
+    err_msg = None
+    if request.method.__eq__('POST'):
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
+        if password.__eq__(confirm):
+            dao.add_user(name=request.form.get('name'),
+                         username=request.form.get('username'),
+                         password=password,
+                         email=request.form.get('email'),
+                         cccd=request.form.get('cccd'),
+                         phone_number=request.form.get('phone_number'),
+                         address=request.form.get('address'))
+
+            return redirect('/login')
+        else:
+            err_msg = 'Mật khẩu không khớp!'
+
+    return render_template('auth/register.html', err_msg=err_msg)
+
+
+@loggedin
+@app.route('/login', methods=['get', 'post'])
+def login_my_user():
+    err_msg = ''
+    if request.method.__eq__('POST'):
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = dao.auth_user(username=username, password=password)
+        if user:
+            login_user(user)
+
+            next = request.args.get('next')
+            return redirect(next if next else '/')
+        else:
+            err_msg = 'Username hoặc password không đúng!'
+
+    return render_template('auth/login.html', err_msg=err_msg)
+
+
+@app.route('/logout', methods=['get'])
+def logout_my_user():
+    logout_user()
+    return redirect('/login')
 
 
 @app.route('/search_flights', methods=['POST'])
@@ -78,10 +124,12 @@ def search_flights():
 def tickets_info():
     passengers_quantity = request.args.get('passengers_quantity')
     hang_ve_chuyen_bay_id = request.args.get('hang_ve_chuyen_bay_id')
+    price = request.args.get('price')
+    print(price)
     passengers_quantity = int(passengers_quantity)
     hang_ve_chuyen_bay_id = int(hang_ve_chuyen_bay_id)
     available_seats = dao.get_available_seats(hang_ve_chuyen_bay_id)
-    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats)
+    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats, total_price=int(price)*passengers_quantity)
 
 
 @app.route('/add_tickets_info', methods=['POST'])

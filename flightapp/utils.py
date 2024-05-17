@@ -13,3 +13,4 @@ def add_minutes_to_time(time_str, minutes_to_add):
 
     # Trả về thời gian sau khi tính toán dưới dạng chuỗi
     return new_time.strftime('%H:%M:%S')
+

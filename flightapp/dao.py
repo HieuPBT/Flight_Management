@@ -62,6 +62,14 @@ def get_available_flights(departure, destination, ticket_class, passengers, leav
     flight_time = get_flight_time(ChuyenBay.id)
     flight_time_td = timedelta(minutes=flight_time)
 
+    current_time = datetime.now()
+    cutoff_time = current_time - timedelta(minutes=
+                                           load_config(QuyDinhKey.SOLDTIME).value
+                                           if current_user.user_role == UserRole.TICKET_SELLER
+                                           else load_config(QuyDinhKey.BOOKINGTIME).value)
+
+    print(cutoff_time)
+
     return ((db
             .session
             .query(func.TIME(ChuyenBay.ngay_gio_khoi_hanh), HangVeChuyenBay.gia, TuyenBay, HangVe.ten, func.TIME(flight_time_td), HangVeChuyenBay.id)
@@ -69,10 +77,12 @@ def get_available_flights(departure, destination, ticket_class, passengers, leav
             .join(ChuyenBay, HangVeChuyenBay.chuyen_bay_id.__eq__(ChuyenBay.id), isouter=True)
             .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id), isouter=True))
             .filter(HangVe.id.__eq__(ticket_class)
+                    & func.TIME(ChuyenBay.ngay_gio_khoi_hanh) < func.TIME(cutoff_time)
                     & TuyenBay.san_bay_di_id.__eq__(departure)
                     & TuyenBay.san_bay_den_id.__eq__(destination)
                     & func.DATE(ChuyenBay.ngay_gio_khoi_hanh).__eq__(leave_date)
-                    & (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id)).__ge__(passengers)).all())
+                    & (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id)).__ge__(passengers)
+                    ).all())
 
 
 def get_flight_time(flight_id):
@@ -189,10 +199,12 @@ def stats_route_flight_count():
 # def stats_
 
 
-def add_user(name, username, password, avatar):
+def add_user(name, username, password, email, cccd, phone_number, address):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    u = User()
-    db.session.add(u)
+    user_info = add_user_info(name, phone_number, address, cccd, email)
+    u = User(username=username, password=password)
+    user_info.tai_khoan_id = u.id
+    db.session.add_all([u, user_info])
     db.session.commit()
 
 

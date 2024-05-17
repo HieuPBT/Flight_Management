@@ -8,20 +8,22 @@
         <label for="month">Tháng thống kê:</label>
         <select id="month" class="form-control mb-2">
             {% for i in range(12) %}
+            {% if i + 1 == current_month %}
+            <option value="{{ i + 1 }}" selected>Tháng {{ i + 1 }}</option>
+            {% else %}
             <option value="{{ i + 1 }}">Tháng {{ i + 1 }}</option>
+            {% endif %}
             {% endfor %}
         </select>
         <label for="year">Năm thống kê:</label>
         <select id="year" class="form-control">
-            <script>
-                var currentYear = new Date().getFullYear();
-                for (var i = currentYear - 3; i <= currentYear + 3; i++) {
-                    if(i == currentYear)
-                        document.write('<option selected value="' + i + '">' + i + '</option>');
-                    else
-                        document.write('<option value="' + i + '">' + i + '</option>');
-                }
-            </script>
+                {% for i in range(current_year - 3, current_year + 3) %}
+                    {% if i == current_year %}
+                        <option value="{{ i }}" selected>{{ i }}</option>
+                    {% else %}
+                        <option value="{{ i }}">{{ i }}</option>
+                    {% endif %}
+                {% endfor %}
         </select>
         <table id="revenueTable" class="table">
             <tr>
@@ -58,7 +60,8 @@
                     {{ "{:,.0f}".format(total) }} VNĐ
                     {% else %}
                     0 VNĐ
-                    {% endif %}</td>
+                    {% endif %}
+                </td>
                 <td></td>
                 <td></td>
             </tr>
@@ -70,29 +73,7 @@
         <canvas id="myChart1"></canvas>
     </div>
 </div>
-<hr class="hr"/>
-<div class="row">
-    <div class="col-md-5 col-12">
-        <table class="table">
-            <tr>
 
-                <th>Thời gian</th>
-                <th>Doanh thu</th>
-            </tr>
-            {% for s in revenue_by_period %}
-            <tr>
-                <td>{{ s[0] }}</td>
-                <td>
-                    {{ "{:,.0f}".format(s[1]) }} VNĐ
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    <div class="col-md-7 col-12">
-        <canvas id="myChart2"></canvas>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
@@ -107,18 +88,6 @@
         {% endif %}
         labels.push('{{ s[1] }}');
     {% endfor %}
-
-    let label2 = [];
-    let data2 = [];
-    {% for s in revenue_by_period %}
-
-        data2.push({{ s[1] }});
-
-        label2.push({{ s[0] }});
-    {% endfor %}
-    window.onload = function() {
-        drawChart("pie", data, labels, "myChart1", "Doanh thu");
-    }
     function updateStats() {
         // Lấy giá trị tháng và năm mới
         var month = document.getElementById("month").value;
@@ -151,7 +120,7 @@
         .catch(error => console.error('Error:', error));
     }
 
-    function updateTable(revenue_by_route, new_total) {
+    function updateTable(revenue_by_route, total) {
         var tableBody = document.querySelector("#revenueTable tbody");
 
         tableBody.innerHTML = `<tr>
@@ -191,17 +160,15 @@
             // Thêm hàng mới vào bảng
             tableBody.appendChild(row);
         }
-        tableBody.innerHTML += `<tr>
+        var totalRow = document.createElement("tr");
+            totalRow.innerHTML = `
                 <td></td>
                 <th>Tổng doanh thu</th>
-                <td>{% if total %}
-                    {{ "{:,.0f}".format(total) }} VNĐ
-                    {% else %}
-                    0 VNĐ
-                    {% endif %}</td>
+                <td>${total.toLocaleString()} VNĐ</td>
                 <td></td>
                 <td></td>
-            </tr>`
+            `;
+        tableBody.appendChild(totalRow);
     }
 
     function updateChart(revenue_by_route) {
@@ -217,6 +184,10 @@
 
 
         // Draw the new chart
+        drawChart("pie", data, labels, "myChart1", "Doanh thu");
+    }
+
+    window.onload = function() {
         drawChart("pie", data, labels, "myChart1", "Doanh thu");
     }
 </script>
