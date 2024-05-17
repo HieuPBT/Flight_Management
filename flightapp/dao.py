@@ -9,23 +9,26 @@ from sqlalchemy import func
 from flightapp import utils
 
 
-def add_bill(transid, pmethod):
-    b = HoaDon(ma_giao_dich=transid, phuong_thuc_giao_dich=pmethod)
+def get_hang_ve_chuyen_bay(hang_ve_chuyen_bay_id):
+    return HangVeChuyenBay.query.get(hang_ve_chuyen_bay_id)
+
+
+def add_bill(transid, pmethod, commit=True):
+    b = HoaDon( phhuong_thuc=pmethod,ma_giao_dich=transid)
 
     db.session.add(b)
-
-    db.session.commit()
+    if commit:
+        db.session.commit()
 
     return b
 
 
-def add_ticket(seat, ticket_class, user, bill):
+def add_ticket(seat, ticket_class, user, bill, commit=True):
     t = Ve(ghe_may_bay_id=seat, hang_ve_chuyen_bay_id=ticket_class, khach_hang_id=user, hoa_don_id=bill)
 
     db.session.add(t)
-
-    db.session.commit()
-
+    if commit:
+        db.session.commit()
     return t
 
 
@@ -34,17 +37,8 @@ def add_ti():
     print(f)
 
 
-def add_tickets_info(orderId, partnerCode):
-    string_numbers = request.form['selected_seats']
-    selected_seats = string_numbers.split(",")
+# def add_tickets_info(orderId, partnerCode):
 
-    # Chuyển đổi các phần tử từ chuỗi sang số nguyên
-    numbers = list(map(int, selected_seats))
-    b = add_bill(orderId, partnerCode)
-    for i in range(int(request.form['passengers_quantity'])):
-        seat = get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id'] ))
-        u = add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
-        add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id, bill=b.id)
 
 
 def add_flight_schedule(depart, depart_date_time, flight_duration, plane, ticket_class_data, im_airport):
@@ -103,25 +97,26 @@ def get_available_flights(departure, destination, ticket_class, passengers, leav
     flight_time_td = timedelta(minutes=flight_time)
 
     current_time = datetime.now()
-    cutoff_time = current_time - timedelta(minutes=
-                                           load_config(QuyDinhKey.SOLDTIME).value
-                                           if current_user.user_role == UserRole.TICKET_SELLER
-                                           else load_config(QuyDinhKey.BOOKINGTIME).value)
+    cutoff_time = current_time + timedelta(minutes=
+                                           load_config(QuyDinhKey.BOOKINGTIME).value
+                                           if current_user.is_anonymous or current_user.user_role in [UserRole.USER]
+                                           else load_config(QuyDinhKey.SOLDTIME).value)
 
     print(cutoff_time)
 
     return ((db
-            .session
-            .query(func.TIME(ChuyenBay.ngay_gio_khoi_hanh), HangVeChuyenBay.gia, TuyenBay, HangVe.ten, func.TIME(flight_time_td), HangVeChuyenBay.id)
-            .join(HangVe, HangVeChuyenBay.hang_ve_id.__eq__(HangVe.id), isouter=True)
-            .join(ChuyenBay, HangVeChuyenBay.chuyen_bay_id.__eq__(ChuyenBay.id), isouter=True)
-            .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id), isouter=True))
-            .filter(HangVe.id.__eq__(ticket_class)
-                    & func.TIME(ChuyenBay.ngay_gio_khoi_hanh) < func.TIME(cutoff_time)
+             .session
+             .query(func.TIME(ChuyenBay.ngay_gio_khoi_hanh), HangVeChuyenBay.gia, TuyenBay, HangVe.ten,
+                    func.TIME(flight_time_td), HangVeChuyenBay.id)
+             .join(HangVe, HangVeChuyenBay.hang_ve_id.__eq__(HangVe.id))
+             .join(ChuyenBay, HangVeChuyenBay.chuyen_bay_id.__eq__(ChuyenBay.id))
+             .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id)))
+            .filter(func.TIME(ChuyenBay.ngay_gio_khoi_hanh).__gt__(func.TIME(cutoff_time))
+                    & HangVe.id.__eq__(ticket_class)
                     & TuyenBay.san_bay_di_id.__eq__(departure)
                     & TuyenBay.san_bay_den_id.__eq__(destination)
                     & func.DATE(ChuyenBay.ngay_gio_khoi_hanh).__eq__(leave_date)
-                    & (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id)).__ge__(passengers)
+                    & (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id).__ge__(passengers))
                     ).all())
 
 
@@ -158,15 +153,16 @@ def get_seat_plane(ghe_id, hang_ve_chuyen_bay_id):
             .filter(GheMayBay.ghe_id.__eq__(ghe_id) & HangVeChuyenBay.id.__eq__(hang_ve_chuyen_bay_id)).first())
 
 
-def add_ticket(ghe_may_bay_id, hang_ve_chuyen_bay_id, khach_hang_id):
-    ticket = Ve(ghe_may_bay_id=ghe_may_bay_id, hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, khach_hang_id=khach_hang_id)
-    db.session.add(ticket)
-    db.session.commit()
+# def add_ticket(ghe_may_bay_id, hang_ve_chuyen_bay_id, khach_hang_id):
+#     ticket = Ve(ghe_may_bay_id=ghe_may_bay_id, hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, khach_hang_id=khach_hang_id)
+#     db.session.add(ticket)
+#     db.session.commit()
 
 
 def get_info(identity=None, phone_number=None):
     session = db.session
-    info = session.query(ThongTinNguoiDung).filter((ThongTinNguoiDung.CCCD == identity) | (ThongTinNguoiDung.so_dien_thoai == phone_number)).first()
+    info = session.query(ThongTinNguoiDung).filter(
+        (ThongTinNguoiDung.CCCD == identity) | (ThongTinNguoiDung.so_dien_thoai == phone_number)).first()
     return info
 
 
@@ -174,12 +170,14 @@ def get_ticket():
     return Ve.query.all()
 
 
-def add_user_info(name, phone_number, address, identity, email):
+def add_user_info(name, phone_number, address, identity, email, commit=True):
     info = get_info(identity, phone_number)
     if info is None:
-        info = ThongTinNguoiDung(ho_va_ten=name, so_dien_thoai=phone_number, dia_chi=address, email=email, CCCD=identity)
+        info = ThongTinNguoiDung(ho_va_ten=name, so_dien_thoai=phone_number, dia_chi=address, email=email,
+                                 CCCD=identity)
         db.session.add(info)
-        db.session.commit()
+        if commit:
+            db.session.commit()
         return info
     else:
         return info
@@ -199,8 +197,10 @@ def stats_flight_revenue_by_route_id(route_id):
 
 def stats_route_revenue(year=datetime.now().year, month=datetime.now().month):
     subquery = (db.session
-                .query(TuyenBay.id.label('tuyen_bay_id'), (HangVeChuyenBay.gia * func.count(Ve.id)).label('total_price'))
+                .query(TuyenBay.id.label('tuyen_bay_id'),
+                       (HangVeChuyenBay.gia * func.count(Ve.id)).label('total_price'))
                 .join(Ve, Ve.hang_ve_chuyen_bay_id.__eq__(HangVeChuyenBay.id), isouter=True)
+                .join(HoaDon, Ve.hoa_don_id.__eq__(HoaDon.id))
                 .join(ChuyenBay, ChuyenBay.id.__eq__(HangVeChuyenBay.chuyen_bay_id))
                 .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))
                 .group_by(TuyenBay.id, HangVeChuyenBay.gia)
@@ -236,16 +236,29 @@ def stats_route_flight_count():
     return (db.session.query(TuyenBay.id, func.count(ChuyenBay.id))
             .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))).group_by(TuyenBay.id).all()
 
-# def stats_
+
+def update_invoices(order_id):
+    print(order_id)
+    invoices = db.session.query(HoaDon).filter(HoaDon.ma_giao_dich.__eq__(order_id))
+    for i in invoices:
+        i.trang_thai = PayStatus.PAID
+    db.session.commit()
+
+
+def get_acc(username):
+    return db.session.query(User.username).filter(User.username.__eq__(username)).first()
 
 
 def add_user(name, username, password, email, cccd, phone_number, address):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
     user_info = add_user_info(name, phone_number, address, cccd, email)
     u = User(username=username, password=password)
-    user_info.tai_khoan_id = u.id
-    db.session.add_all([u, user_info])
+    db.session.add(u)
     db.session.commit()
+    if user_info.tai_khoan_id:
+        user_info.tai_khoan_id = u.id
+        db.session.add(user_info)
+        db.session.commit()
 
 
 def auth_user(username, password):
@@ -256,4 +269,4 @@ def auth_user(username, password):
 
 if __name__ == '__main__':
     with app.app_context():
-        print(stats_route_revenue(2024, 5))
+        print(get_acc('admin'))

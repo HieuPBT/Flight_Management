@@ -65,12 +65,12 @@
         </div>
 <!--        <button type="submit" class="btn btn-primary">Thanh Toán</button>-->
 <!--        <h1>test {{(total_price|string)}}</h1>-->
-        <a href="javascript:;" type="submit" onclick="momoPay({{total_price}})" class="btn btn-danger">Thanh Toán</a>
+        <button href="javascript:;" type="submit" onclick="add_tickets(event)" class="btn btn-danger">Thanh Toán</button>
     </form>
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
         var selectedSeats = []; // Mảng để lưu trữ id của các ghế đã chọn
+    document.addEventListener('DOMContentLoaded', function() {
 
         var buttons = document.querySelectorAll('.seat.available');
         var buttonsDisabled = document.querySelectorAll('.seat.occupied');
@@ -109,26 +109,58 @@
         });
     });
     function add_tickets(event) {
-        if(selectedSeats.length !== {{ passengers_quantity }}) {
-            alert("Chưa chọn đủ ghế");
-            return;
-        }
         event.preventDefault();
-        var formData = new FormData(document.querySelector('form'));
-        formData.append('selected_seats', JSON.stringify(selectedSeats));
+        console.log('ok')
+        var passengerForm = document.getElementById('passengerForm');
+        var formData = new FormData(passengerForm);
+        var passengers_quantity = formData.get('passengers_quantity');
+        var hang_ve_chuyen_bay_id = formData.get('hang_ve_chuyen_bay_id');
+        var payMethod = formData.get('payMethod');
+
+        var passengerData = [];
+        for (var i = 0; i < passengers_quantity; i++) {
+            var passenger = {
+                phoneNumber: formData.get('phoneNumber_' + i),
+                cccd: formData.get('cccd_' + i),
+                name: formData.get('name_' + i),
+                address: formData.get('address_' + i),
+                email: formData.get('email_' + i)
+            };
+            passengerData.push(passenger);
+        }
+
+        if (selectedSeats.length !== parseInt(passengers_quantity)) {
+            alert("Chưa chọn đủ ghế");
+            return false;
+        }
+
+        var data = {
+            passengers_quantity: passengers_quantity,
+            selected_seats: selectedSeats,
+            hang_ve_chuyen_bay_id: hang_ve_chuyen_bay_id,
+            payMethod: payMethod,
+            passengers: passengerData
+        };
 
         fetch("/add_tickets_info", {
             method: "POST",
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
+            console.log(data.payUrl);
+            console.log(data["payUrl"])
+            window.location.href = data.payUrl;
+            // handle the response as needed
         })
         .catch(error => {
             console.error('Error:', error);
         });
     }
+
 </script>
 
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, session
+from flask import Flask, render_template, request, redirect, jsonify, url_for, session, g
 from flightapp import app, login, dao, configs
 from flask_login import login_user, logout_user, login_required
 
@@ -72,14 +72,19 @@ def register_user():
         password = request.form.get('password')
         confirm = request.form.get('confirm')
         if password.__eq__(confirm):
-            dao.add_user(name=request.form.get('name'),
-                         username=request.form.get('username'),
-                         password=password,
-                         email=request.form.get('email'),
-                         cccd=request.form.get('cccd'),
-                         phone_number=request.form.get('phone_number'),
-                         address=request.form.get('address'))
-
+            if dao.get_info(request.form.get('cccd'), request.form.get('phone_number')) is None:
+                if dao.get_acc(request.form.get('username')) is None:
+                    dao.add_user(name=request.form.get('name'),
+                                 username=request.form.get('username'),
+                                 password=password,
+                                 email=request.form.get('email'),
+                                 cccd=request.form.get('cccd'),
+                                 phone_number=request.form.get('phone_number'),
+                                 address=request.form.get('address'))
+                else:
+                    err_msg = 'Username đã được đăng ký'
+            else:
+                err_msg = 'Thông tin đã tồn tại'
             return redirect('/login')
         else:
             err_msg = 'Mật khẩu không khớp!'
@@ -128,25 +133,37 @@ def search_flights():
 def tickets_info():
     passengers_quantity = request.args.get('passengers_quantity')
     hang_ve_chuyen_bay_id = request.args.get('hang_ve_chuyen_bay_id')
+    total_price = request.args.get('total_price')
     passengers_quantity = int(passengers_quantity)
     hang_ve_chuyen_bay_id = int(hang_ve_chuyen_bay_id)
     available_seats = dao.get_available_seats(hang_ve_chuyen_bay_id)
-    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats, total_price=int(price)*passengers_quantity)
+    return render_template('tickets_info.html', hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, passengers_quantity=passengers_quantity, available_seats=available_seats, total_price=int(total_price)*passengers_quantity)
 
 
 @app.route('/add_tickets_info', methods=['POST'])
 def add_tickets_info():
-    string_numbers = request.form['selected_seats']
-    selected_seats = string_numbers.split(",")
-
-    # Chuyển đổi các phần tử từ chuỗi sang số nguyên
-    numbers = list(map(int, selected_seats))
-    for i in range(int(request.form['passengers_quantity'])):
-        seat = dao.get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id'] ))
-        u = dao.add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
-        dao.add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id)
-
-    return jsonify({'ok':'200'})
+    try:
+        data = request.get_json()
+        passengers_quantity = data.get('passengers_quantity')
+        selected_seats = data.get('selected_seats')
+        hang_ve_chuyen_bay_id = data.get('hang_ve_chuyen_bay_id')
+        payMethod = data.get('payMethod')
+        passengers = data.get('passengers')
+        total_amount = int(passengers_quantity) * dao.get_hang_ve_chuyen_bay(int(hang_ve_chuyen_bay_id)).gia
+        momo_response = requests.post('http://localhost:5000/api/momo-pay', json={'total': total_amount})
+        transid = momo_response.json().get('orderId')
+        with db.session.begin_nested():
+            g.current_session = db.session
+            for i in range(int(passengers_quantity)):
+                u = dao.add_user_info(passengers[i]['name'], passengers[i]['phoneNumber'], passengers[i]['address'], passengers[i]['cccd'], passengers[i]['email'], False)
+                bill = dao.add_bill(transid, payMethod, False)
+                ve = dao.add_ticket(int(selected_seats[i]), int(hang_ve_chuyen_bay_id), u.id, bill.id, False)
+            g.current_session.commit()
+        payUrl = momo_response.json().get('payUrl')
+        print(payUrl)
+        return jsonify({'status': 'success', 'payUrl': payUrl})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
 
 
 @app.route('/admin/update_stats', methods=['POST'])
@@ -174,8 +191,8 @@ def momo_pay():
     orderInfo = "pay with MoMo"
     requestType = "captureWallet"
     extraData = ""
-    redirectUrl = "https://6757-171-243-48-141.ngrok-free.app/"
-    ipnUrl = "https://6757-171-243-48-141.ngrok-free.app/api/momo-pay/ipn"
+    redirectUrl = "https://aa6b-2001-ee0-4f81-ab80-c5f-532a-a27d-6721.ngrok-free.app"
+    ipnUrl = "https://aa6b-2001-ee0-4f81-ab80-c5f-532a-a27d-6721.ngrok-free.app/api/momo-pay/ipn"
     rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType
     h = hmac.new(bytes(secretKey, 'ascii'), bytes(rawSignature, 'ascii'), hashlib.sha256)
     signature = h.hexdigest()
@@ -200,8 +217,7 @@ def momo_pay():
     response = requests.post(endpoint, data=data,
                              headers={'Content-Type': 'application/json', 'Content-Length': str(clen)})
     if response.status_code == 200:
-        data1 = request.json
-        print(data1)
+
         response_data = response.json()
         # string_numbers = session.get('selected_seats')
         # print(string_numbers)
@@ -209,7 +225,9 @@ def momo_pay():
 
         print(response.json())
         return jsonify({'ok': '200',
-                        'payUrl': response_data.get('payUrl')})
+                        'payUrl': response_data.get('payUrl'),
+                        'orderId': response_data.get('orderId')
+                        })
         # return redirect(response_data.get('payUrl'))
 
     else:
@@ -219,6 +237,7 @@ def momo_pay():
 
 @app.route('/api/momo-pay/ipn', methods=['POST'])
 def momo_ipn():
+    print("ok_ipne")
     data = json.loads(request.get_data(as_text=True))
     print(data)
     result_code = data["resultCode"]
@@ -229,7 +248,7 @@ def momo_ipn():
             'status': 400})
 
     try:
-        dao.update_bill(orderId)
+        dao.update_invoices(orderId)
         return jsonify({'status': 200})
     except Exception as e:
         return jsonify({'status': 500, 'error': str(e)})

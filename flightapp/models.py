@@ -36,6 +36,17 @@ class Cot(enum):
     F = 'F'
 
 
+class PayMethod(enum):
+    MOMO = 1
+    ZALOPAY = 2
+
+
+class PayStatus(enum):
+    UNPAID = 1
+    UNCONFIRM = 2
+    PAID = 3
+
+
 class Base(db.Model):
     __abstract__ = True
 
@@ -49,7 +60,8 @@ class User(Base, UserMixin):
     password = Column(String(50), nullable=False)
     user_role = Column(Enum(UserRole), default=UserRole.USER)
     thong_tin_nguoi_dung = relationship('ThongTinNguoiDung', backref='user', lazy=False, uselist=False)
-    quy_dinh = relationship('QuyDinh', foreign_keys='QuyDinh.nhan_vien_quan_tri_id', backref='nhan_vien_quan_tri', lazy=True)
+    quy_dinh = relationship('QuyDinh', foreign_keys='QuyDinh.nhan_vien_quan_tri_id', backref='nhan_vien_quan_tri',
+                            lazy=True)
 
     def __str__(self):
         return self.username
@@ -81,7 +93,8 @@ class TuyenBay(Base):
     san_bay_den_id = Column(Integer, ForeignKey('san_bay.id'), nullable=False)
     san_bay_di = relationship('SanBay', foreign_keys=[san_bay_di_id], backref='tuyen_bay_di', lazy=True)
     san_bay_den = relationship('SanBay', foreign_keys=[san_bay_den_id], backref='tuyen_bay_den', lazy=True)
-    #chuyen_bay = relationship('ChuyenBay', backref='tuyen_bay', lazy=True)
+
+    # chuyen_bay = relationship('ChuyenBay', backref='tuyen_bay', lazy=True)
 
     def __str__(self):
         return f"{self.san_bay_di} - {self.san_bay_den}"
@@ -100,6 +113,7 @@ class Ghe(Base):
 class MayBay(Base):
     ten = Column(String(20), nullable=False)
     ghe_may_bay = relationship('GheMayBay', backref='may_bay', lazy=True)
+
     # chuyen_bay = relationship('ChuyenBay', backref='may_bay', lazy=True)
 
     def __str__(self):
@@ -129,7 +143,7 @@ class ChuyenBay(Base):
 class HangVeChuyenBay(Base):
     hang_ve_id = Column(Integer, ForeignKey('hang_ve.id'), nullable=False)
     chuyen_bay_id = Column(Integer, ForeignKey('chuyen_bay.id'), nullable=False)
-    so_luong = Column(Integer, nullable=False) #số lượng hạng vé này trên chuyến bay này
+    so_luong = Column(Integer, nullable=False)  # số lượng hạng vé này trên chuyến bay này
     gia = Column(Integer, nullable=False)
     ve = relationship('Ve', backref='hang_ve_chuyen_bay', lazy=True)
     __table_args__ = (
@@ -159,6 +173,9 @@ class Ve(Base):
 
 class HoaDon(Base):
     ve = relationship('Ve', backref='hoa_don', uselist=False, lazy=True)
+    ma_giao_dich = Column(String(100), nullable=False)
+    phhuong_thuc = Column(Enum(PayMethod), nullable=False)
+    trang_thai = Column(Enum(PayStatus), nullable=False, default=PayStatus.UNPAID)
 
 
 class SanBayTrungGian(Base):
@@ -261,8 +278,11 @@ if __name__ == '__main__':
         # # Thiết lập mối quan hệ giữa ghế và máy bay
         # for i in danh_sach_may_bay:
         #     for j in danh_sach_ghe:
-        #         if j.hang < 3:
+        #         if j.hang < 4:
         #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv1.id)
+        #             db.session.add(ghe_may_bay)
+        #         elif j.hang >= 4 and j.hang <= 30:
+        #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv3.id)
         #             db.session.add(ghe_may_bay)
         #         else:
         #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv2.id)
