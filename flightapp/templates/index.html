@@ -12,6 +12,7 @@
             </div>
             <div class="col col-md-4 col-9 mb-2">
                 <select class="form-select" aria-label="Default select example" name="departure" id="departure" required>
+                    <option value="" selected disabled>Điểm đi</option>
                     {% for i in SB %}
                     <option value="{{ i.id }}">{{ i.tinh }}</option>
                     {% endfor %}
@@ -22,6 +23,7 @@
             </div>
             <div class="col col-md-4 col-9 mb-2">
                 <select class="form-select" aria-label="Default select example" name="destination" id="destination" required>
+                    <option value="" selected disabled>Điểm đến</option>
                     {% for i in SB %}
                     <option value="{{ i.id }}">{{ i.tinh }}</option>
                     {% endfor %}
@@ -40,6 +42,7 @@
             </div>
             <div class="col col-md-4 col-9 mb-2">
                 <select class="form-select" aria-label="Default select example" name="ticket_class">
+                    <option value="" selected disabled>Hạng vé</option>
                     {% for i in HV %}
                     <option value="{{ i.id }}">{{ i.ten }}</option>
                     {% endfor %}
@@ -68,5 +71,8 @@
             return false;
         }
     });
+
 </script>
+
+<script src="{{ url_for('static', filename='js/pay.js') }}"></script>
 {% endblock %}
