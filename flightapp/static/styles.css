@@ -1,0 +1,30 @@
+footer {
+    /*position: fixed;*/
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+}
+.seat {
+    width: 40px;
+    height: 40px;
+    margin: 5px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 4px;
+
+}
+.available {
+    background-color: white;
+}
+.occupied {
+    background-color: lightgray;
+}
+.selected {
+    background-color: lightgreen;
+}
+.display_none {
+    display: none;
+}

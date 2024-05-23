@@ -1,0 +1,17 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+
+<h1>Danh sách ghế</h1>
+<div>
+    {% for seat in seats %}
+    <div class="seat {% if seat.available %}available{% else %}occupied{% endif %}">
+        {{ seat[0].cot }} {{ seat[0].hang }}
+    </div>
+    {% if loop.index % 6 == 0 %}<br>{% endif %}
+    {% endfor %}
+</div>
+
+{% endblock %}

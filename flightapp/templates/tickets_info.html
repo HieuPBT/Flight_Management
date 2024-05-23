@@ -1,0 +1,174 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+
+
+<div class="container mb-4">
+    <form class="border p-3 rounded m-4 mb-4 row " id="passengerForm"
+          onsubmit="return add_tickets(event);">
+        {% for i in range(passengers_quantity) %}
+        <h3 class="text-center text-primary">Nhập thông tin hành khách {% if passengers_quantity > 1 %}thứ {{ i + 1 }}
+            {% else %}{% endif %}</h3>
+        <div class="form-floating mb-2 col col-md-6 col-12">
+            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber_{{ i }}"
+                   placeholder="Số điện thoại">
+            <label for="phoneNumber">Số điện thoại</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="text" class="form-control" id="cccd" name="cccd_{{ i }}" placeholder="Căn Cước Công Dân">
+            <label for="cccd">Căn Cước Công Dân</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="text" class="form-control" id="name" name="name_{{ i }}" placeholder="Họ và tên">
+            <label for="name">Họ và tên</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="text" class="form-control" id="address" name="address_{{ i }}" placeholder="Địa chỉ">
+            <label for="cccd">Địa chỉ</label>
+        </div>
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <input type="email" class="form-control" id="email" name="email_{{ i }}" placeholder="Địa chỉ email">
+            <label for="email">Địa chỉ email</label>
+        </div>
+        <input type="hidden" id="passengers_quantity_hidden" name="passengers_quantity"
+               value="{{ passengers_quantity }}">
+        <input type="hidden" name="selected_seats" id="selectedSeatsInput">
+        <input type="hidden" name="hang_ve_chuyen_bay_id" value="{{ hang_ve_chuyen_bay_id }}">
+        {% endfor %}
+
+        <div class="form-floating mb-2 mb-2 col col-md-6 col-12">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="payMethod" id="momo" value="MOMO" checked>
+                <label class="form-check-label">
+                    MOMO
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="payMethod" id="zalo" value="ZALOPAY">
+                <label class="form-check-label">
+                    ZALOPAY
+                </label>
+            </div>
+        </div>
+
+        <h2 class="text-primary text-center">Chọn {% if passengers_quantity > 1 %}{{ passengers_quantity }}{% else %}{%
+            endif %} ghế của quý khách</h2>
+        <div class="text-center">
+            {% for seat in available_seats %}
+            <button class="seat {% if seat.available %}available{% else %}occupied{% endif %}" id="{{ seat.id }}">{{
+                seat.cot.value }}{{ seat.hang }}
+            </button>
+            {% if loop.index % 6 == 0 %}<br>{% endif %}
+            {% endfor %}
+        </div>
+<!--        <button type="submit" class="btn btn-primary">Thanh Toán</button>-->
+<!--        <h1>test {{(total_price|string)}}</h1>-->
+        <button href="javascript:;" type="submit" onclick="add_tickets(event)" class="btn btn-danger">Thanh Toán</button>
+    </form>
+</div>
+<script>
+        var selectedSeats = []; // Mảng để lưu trữ id của các ghế đã chọn
+    document.addEventListener('DOMContentLoaded', function() {
+
+        var buttons = document.querySelectorAll('.seat.available');
+        var buttonsDisabled = document.querySelectorAll('.seat.occupied');
+        buttonsDisabled.forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+            });
+        });
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                var seatId = this.getAttribute('id');
+                if (!this.classList.contains('occupied')) {
+                    // Kiểm tra xem số lượng ghế đã chọn có nhỏ hơn hoặc bằng số lượng hành khách hay không
+                    if (selectedSeats.length < {{ passengers_quantity }} || selectedSeats.includes(seatId)) {
+                        // Kiểm tra xem ghế đã được chọn hay chưa
+                        if (selectedSeats.includes(seatId)) {
+                            // Nếu ghế đã được chọn thì loại bỏ khỏi mảng
+                            var index = selectedSeats.indexOf(seatId);
+                            if (index !== -1) {
+                                selectedSeats.splice(index, 1);
+                                // Sau khi cập nhật selectedSeats, cập nhật giá trị của input hidden
+                                document.getElementById("selectedSeatsInput").value = selectedSeats;
+                            }
+                        } else {
+                            // Nếu ghế chưa được chọn thì thêm vào mảng
+                            selectedSeats.push(seatId);
+                            // Sau khi cập nhật selectedSeats, cập nhật giá trị của input hidden
+                            document.getElementById("selectedSeatsInput").value = selectedSeats;
+                        }
+                        // Thêm hoặc xóa class 'selected' tùy thuộc vào trạng thái ghế
+                        this.classList.toggle('selected');
+                    }
+                }
+            });
+        });
+    });
+    function add_tickets(event) {
+        if(selectedSeats.length !== {{ passengers_quantity }}) {
+            alert("Chưa chọn đủ ghế");
+            return;
+        }
+        event.preventDefault();
+        console.log('ok')
+        var passengerForm = document.getElementById('passengerForm');
+        var formData = new FormData(passengerForm);
+        var passengers_quantity = formData.get('passengers_quantity');
+        var hang_ve_chuyen_bay_id = formData.get('hang_ve_chuyen_bay_id');
+        var payMethod = formData.get('payMethod');
+
+        var passengerData = [];
+        for (var i = 0; i < passengers_quantity; i++) {
+            var passenger = {
+                phoneNumber: formData.get('phoneNumber_' + i),
+                cccd: formData.get('cccd_' + i),
+                name: formData.get('name_' + i),
+                address: formData.get('address_' + i),
+                email: formData.get('email_' + i)
+            };
+            passengerData.push(passenger);
+        }
+
+        if (selectedSeats.length !== parseInt(passengers_quantity)) {
+            alert("Chưa chọn đủ ghế");
+            return false;
+        }
+
+        var data = {
+            passengers_quantity: passengers_quantity,
+            selected_seats: selectedSeats,
+            hang_ve_chuyen_bay_id: hang_ve_chuyen_bay_id,
+            payMethod: payMethod,
+            passengers: passengerData
+        };
+
+        fetch("/add_tickets_info", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            console.log(data.payUrl);
+            console.log(data["payUrl"])
+            window.location.href = data.payUrl;
+            // handle the response as needed
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+</script>
+
+
+<script src="{{ url_for('static', filename='js/pay.js') }}"></script>
+
+{% endblock %}
