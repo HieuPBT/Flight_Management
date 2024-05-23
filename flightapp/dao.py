@@ -5,7 +5,7 @@ from flask import request, session
 from models import *
 from flask_login import current_user
 import hashlib
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from flightapp import utils
 
 
@@ -14,9 +14,10 @@ def get_hang_ve_chuyen_bay(hang_ve_chuyen_bay_id):
 
 
 def add_bill(transid, pmethod, commit=True):
-    b = HoaDon( phhuong_thuc=pmethod,ma_giao_dich=transid)
+    b = HoaDon(phhuong_thuc=pmethod, ma_giao_dich=transid)
 
     db.session.add(b)
+    db.session.flush()
     if commit:
         db.session.commit()
 
@@ -45,8 +46,9 @@ def add_tickets_info(orderId, partnerCode):
     numbers = list(map(int, selected_seats))
     b = add_bill(orderId, partnerCode)
     for i in range(int(request.form['passengers_quantity'])):
-        seat = get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id'] ))
-        u = add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'], request.form[f'cccd_{i}'], request.form[f'email_{i}'])
+        seat = get_seat_plane(numbers[i], int(request.form['hang_ve_chuyen_bay_id']))
+        u = add_user_info(request.form[f'name_{i}'], request.form[f'phoneNumber_{i}'], request.form[f'address_{i}'],
+                          request.form[f'cccd_{i}'], request.form[f'email_{i}'])
         add_ticket(seat.id, int(request.form['hang_ve_chuyen_bay_id']), u.id, bill=b.id)
 
 
@@ -120,13 +122,16 @@ def get_available_flights(departure, destination, ticket_class, passengers, leav
              .join(HangVe, HangVeChuyenBay.hang_ve_id.__eq__(HangVe.id))
              .join(ChuyenBay, HangVeChuyenBay.chuyen_bay_id.__eq__(ChuyenBay.id))
              .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id)))
-            .filter(func.TIME(ChuyenBay.ngay_gio_khoi_hanh).__gt__(func.TIME(cutoff_time))
-                    & HangVe.id.__eq__(ticket_class)
-                    & TuyenBay.san_bay_di_id.__eq__(departure)
-                    & TuyenBay.san_bay_den_id.__eq__(destination)
-                    & func.DATE(ChuyenBay.ngay_gio_khoi_hanh).__eq__(leave_date)
-                    & (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id).__ge__(passengers))
-                    ).all())
+            .filter(
+        and_(
+            ChuyenBay.ngay_gio_khoi_hanh > cutoff_time,
+            HangVe.id == ticket_class,
+            TuyenBay.san_bay_di_id == departure,
+            TuyenBay.san_bay_den_id == destination,
+            func.date(ChuyenBay.ngay_gio_khoi_hanh) == leave_date,
+            (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id)) >= passengers
+        ))
+            .all())
 
 
 def get_flight_time(flight_id):
@@ -162,10 +167,14 @@ def get_seat_plane(ghe_id, hang_ve_chuyen_bay_id):
             .filter(GheMayBay.ghe_id.__eq__(ghe_id) & HangVeChuyenBay.id.__eq__(hang_ve_chuyen_bay_id)).first())
 
 
-def add_ticket(ghe_may_bay_id, hang_ve_chuyen_bay_id, khach_hang_id):
-    ticket = Ve(ghe_may_bay_id=ghe_may_bay_id, hang_ve_chuyen_bay_id=hang_ve_chuyen_bay_id, khach_hang_id=khach_hang_id)
-    db.session.add(ticket)
-    db.session.commit()
+def add_ticket(seat, ticket_class, user, bill, commit=True):
+    t = Ve(ghe_may_bay_id=seat, hang_ve_chuyen_bay_id=ticket_class, khach_hang_id=user, hoa_don_id=bill)
+
+    db.session.add(t)
+    db.session.flush()
+    if commit:
+        db.session.commit()
+    return t
 
 
 def get_info(identity=None, phone_number=None):
@@ -213,8 +222,9 @@ def stats_route_revenue(year=datetime.now().year, month=datetime.now().month):
                 .join(ChuyenBay, ChuyenBay.id.__eq__(HangVeChuyenBay.chuyen_bay_id))
                 .join(TuyenBay, TuyenBay.id.__eq__(ChuyenBay.tuyen_bay_id))
                 .group_by(TuyenBay.id, HangVeChuyenBay.gia)
-                .filter(func.extract('year', ChuyenBay.created_date).__eq__(year))
-                .filter(func.extract('month', ChuyenBay.created_date).__eq__(month))
+                .filter(func.extract('year', HoaDon.created_date).__eq__(year))
+                .filter(func.extract('month', HoaDon.created_date).__eq__(month))
+                .filter(HoaDon.trang_thai.__eq__(PayStatus.PAID))
                 .subquery())
 
     query = (db.session.query(subquery.c.tuyen_bay_id, func.sum(subquery.c.total_price))

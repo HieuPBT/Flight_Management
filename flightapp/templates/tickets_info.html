@@ -155,6 +155,7 @@
         })
         .then(response => response.json())
         .then(data => {
+            console.log(data);
             console.log(data.payUrl);
             console.log(data["payUrl"])
             window.location.href = data.payUrl;

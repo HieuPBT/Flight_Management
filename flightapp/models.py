@@ -194,101 +194,101 @@ class QuyDinh(Base):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        #
-        # import hashlib
-        #
-        #
-        # u = User(username='admin',
-        #          password=str(hashlib.md5("123456".encode('utf-8')).hexdigest()),
-        #          user_role=UserRole.ADMIN)  # Use the ID of the created record
-        # db.session.add(u)
-        # db.session.commit()
-        #
-        # info = ThongTinNguoiDung(ho_va_ten="admin", tai_khoan_id=1)
-        # info2 = ThongTinNguoiDung(ho_va_ten="Nguyễn Xuân Lộc", so_dien_thoai='0362655091', dia_chi='Gia Lai',
-        #                           email='2151013052loc@gmail.com', CCCD='0798723983792')
-        # db.session.add_all([info, info2])  # Add and commit information first
-        # db.session.commit()
-        #
-        # sb1 = SanBay(ten='Cà Mau', tinh='Cà Mau')
-        # sb2 = SanBay(ten='Cần Thơ', tinh='Cần Thơ')
-        # sb3 = SanBay(ten='Đà Nẵng', tinh='Đà Nẵng')
-        # sb4 = SanBay(ten='Pleiku', tinh='Pleiku')
-        # sb5 = SanBay(ten='Tân Sơn Nhất', tinh='Thành phố Hồ Chí Minh')
-        # sb6 = SanBay(ten='Nội Bài', tinh='Hà Nội')
-        # sb7 = SanBay(ten='Điện Biên Phủ', tinh='Điện Biên')
-        # sb8 = SanBay(ten='Liên Khương', tinh='Lâm Đồng')
-        # sb9 = SanBay(ten='Phú Bài', tinh='Thừa Thiên Huế')
-        # sb10 = SanBay(ten='Vinh', tinh='Nghệ An')
-        #
-        #
-        # db.session.add_all([sb1, sb2, sb3, sb4, sb5, sb6, sb7, sb8, sb9, sb10])
-        #
-        # db.session.commit()
-        #
-        # tb1 = TuyenBay(san_bay_di_id=5, san_bay_den_id=6)  # HCM - HN
-        # tb2 = TuyenBay(san_bay_di_id=6, san_bay_den_id=5)  # HN - HCM
-        # tb3 = TuyenBay(san_bay_di_id=1, san_bay_den_id=2)  # Cà Mau - Cần Thơ
-        # tb4 = TuyenBay(san_bay_di_id=9, san_bay_den_id=10)  # Hue - Nghệ An
-        # db.session.add_all([tb1, tb2, tb3, tb4])
-        #
-        # db.session.commit()
-        #
-        # # Tạo danh sách ghế và máy bay
-        # mb1 = MayBay(ten='BOE701')
-        # mb2 = MayBay(ten='VietAir234')
-        # mb3 = MayBay(ten='AirJet709')
-        # danh_sach_ghe = []
-        # danh_sach_may_bay = [mb1, mb2, mb3]
-        #
-        # # Số hàng và số cột
-        # so_hang = 50
-        # so_cot = ['A', 'B', 'C', 'D', 'E', 'F']
-        #
-        # # Tạo 300 ghế
-        # for hang in range(1, so_hang + 1):
-        #     for cot in so_cot:
-        #         ghe = Ghe(cot=Cot[cot], hang=hang)
-        #         danh_sach_ghe.append(ghe)
-        #
-        # # Lưu trữ ghế vào cơ sở dữ liệu
-        # db.session.add_all(danh_sach_ghe)
-        # db.session.add_all(danh_sach_may_bay)
-        # db.session.commit()
-        #
-        # hv1 = HangVe(ten='Thương Gia')
-        # hv2 = HangVe(ten='Phổ Thông')
-        # hv3 = HangVe(ten='Tiết Kiệm')
-        #
-        # db.session.add_all([hv3, hv1, hv2])
-        #
-        # db.session.commit()
-        # # Thiết lập mối quan hệ giữa ghế và máy bay
-        # for i in danh_sach_may_bay:
-        #     for j in danh_sach_ghe:
-        #         if j.hang < 4:
-        #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv1.id)
-        #             db.session.add(ghe_may_bay)
-        #         elif j.hang >= 4 and j.hang <= 30:
-        #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv3.id)
-        #             db.session.add(ghe_may_bay)
-        #         else:
-        #             ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv2.id)
-        #             db.session.add(ghe_may_bay)
-        #
-        # db.session.commit()
-        #
-        #
-        # qd1 = QuyDinh(key=QuyDinhKey.NUAIRPORT, value=10, nhan_vien_quan_tri_id=1)
-        # qd2 = QuyDinh(key=QuyDinhKey.MINFLIGHT, value=30, nhan_vien_quan_tri_id=1)
-        # qd3 = QuyDinh(key=QuyDinhKey.MAXIMAIRPORT, value=3, nhan_vien_quan_tri_id=1)
-        # qd4 = QuyDinh(key=QuyDinhKey.MAXSTOP, value=30, nhan_vien_quan_tri_id=1)
-        # qd5 = QuyDinh(key=QuyDinhKey.MINSTOP, value=15, nhan_vien_quan_tri_id=1)
-        # qd6 = QuyDinh(key=QuyDinhKey.BASEPRICE, value=300000, nhan_vien_quan_tri_id=1)
-        # qd7 = QuyDinh(key=QuyDinhKey.BOOKINGTIME, value=720, nhan_vien_quan_tri_id=1)
-        # qd8 = QuyDinh(key=QuyDinhKey.SOLDTIME, value=240, nhan_vien_quan_tri_id=1)
-        # qd9 = QuyDinh(key=QuyDinhKey.NUTICKETCLASS, value=3, nhan_vien_quan_tri_id=1)
-        #
-        # db.session.add_all([qd1, qd2, qd3, qd4, qd5, qd6, qd7, qd8, qd9])
-        #
-        # db.session.commit()
+
+        import hashlib
+
+
+        u = User(username='admin',
+                 password=str(hashlib.md5("123456".encode('utf-8')).hexdigest()),
+                 user_role=UserRole.ADMIN)  # Use the ID of the created record
+        db.session.add(u)
+        db.session.commit()
+
+        info = ThongTinNguoiDung(ho_va_ten="admin", tai_khoan_id=1)
+        info2 = ThongTinNguoiDung(ho_va_ten="Nguyễn Xuân Lộc", so_dien_thoai='0362655091', dia_chi='Gia Lai',
+                                  email='2151013052loc@gmail.com', CCCD='0798723983792')
+        db.session.add_all([info, info2])  # Add and commit information first
+        db.session.commit()
+
+        sb1 = SanBay(ten='Cà Mau', tinh='Cà Mau')
+        sb2 = SanBay(ten='Cần Thơ', tinh='Cần Thơ')
+        sb3 = SanBay(ten='Đà Nẵng', tinh='Đà Nẵng')
+        sb4 = SanBay(ten='Pleiku', tinh='Pleiku')
+        sb5 = SanBay(ten='Tân Sơn Nhất', tinh='Thành phố Hồ Chí Minh')
+        sb6 = SanBay(ten='Nội Bài', tinh='Hà Nội')
+        sb7 = SanBay(ten='Điện Biên Phủ', tinh='Điện Biên')
+        sb8 = SanBay(ten='Liên Khương', tinh='Lâm Đồng')
+        sb9 = SanBay(ten='Phú Bài', tinh='Thừa Thiên Huế')
+        sb10 = SanBay(ten='Vinh', tinh='Nghệ An')
+
+
+        db.session.add_all([sb1, sb2, sb3, sb4, sb5, sb6, sb7, sb8, sb9, sb10])
+
+        db.session.commit()
+
+        tb1 = TuyenBay(san_bay_di_id=5, san_bay_den_id=6)  # HCM - HN
+        tb2 = TuyenBay(san_bay_di_id=6, san_bay_den_id=5)  # HN - HCM
+        tb3 = TuyenBay(san_bay_di_id=1, san_bay_den_id=2)  # Cà Mau - Cần Thơ
+        tb4 = TuyenBay(san_bay_di_id=9, san_bay_den_id=10)  # Hue - Nghệ An
+        db.session.add_all([tb1, tb2, tb3, tb4])
+
+        db.session.commit()
+
+        # Tạo danh sách ghế và máy bay
+        mb1 = MayBay(ten='BOE701')
+        mb2 = MayBay(ten='VietAir234')
+        mb3 = MayBay(ten='AirJet709')
+        danh_sach_ghe = []
+        danh_sach_may_bay = [mb1, mb2, mb3]
+
+        # Số hàng và số cột
+        so_hang = 50
+        so_cot = ['A', 'B', 'C', 'D', 'E', 'F']
+
+        # Tạo 300 ghế
+        for hang in range(1, so_hang + 1):
+            for cot in so_cot:
+                ghe = Ghe(cot=Cot[cot], hang=hang)
+                danh_sach_ghe.append(ghe)
+
+        # Lưu trữ ghế vào cơ sở dữ liệu
+        db.session.add_all(danh_sach_ghe)
+        db.session.add_all(danh_sach_may_bay)
+        db.session.commit()
+
+        hv1 = HangVe(ten='Thương Gia')
+        hv2 = HangVe(ten='Phổ Thông')
+        hv3 = HangVe(ten='Tiết Kiệm')
+
+        db.session.add_all([hv3, hv1, hv2])
+
+        db.session.commit()
+        # Thiết lập mối quan hệ giữa ghế và máy bay
+        for i in danh_sach_may_bay:
+            for j in danh_sach_ghe:
+                if j.hang < 4:
+                    ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv1.id)
+                    db.session.add(ghe_may_bay)
+                elif j.hang >= 4 and j.hang <= 30:
+                    ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv3.id)
+                    db.session.add(ghe_may_bay)
+                else:
+                    ghe_may_bay = GheMayBay(ghe_id=j.id, may_bay_id=i.id, hang_ve_id=hv2.id)
+                    db.session.add(ghe_may_bay)
+
+        db.session.commit()
+
+
+        qd1 = QuyDinh(key=QuyDinhKey.NUAIRPORT, value=10, nhan_vien_quan_tri_id=1)
+        qd2 = QuyDinh(key=QuyDinhKey.MINFLIGHT, value=30, nhan_vien_quan_tri_id=1)
+        qd3 = QuyDinh(key=QuyDinhKey.MAXIMAIRPORT, value=3, nhan_vien_quan_tri_id=1)
+        qd4 = QuyDinh(key=QuyDinhKey.MAXSTOP, value=30, nhan_vien_quan_tri_id=1)
+        qd5 = QuyDinh(key=QuyDinhKey.MINSTOP, value=15, nhan_vien_quan_tri_id=1)
+        qd6 = QuyDinh(key=QuyDinhKey.BASEPRICE, value=300000, nhan_vien_quan_tri_id=1)
+        qd7 = QuyDinh(key=QuyDinhKey.BOOKINGTIME, value=720, nhan_vien_quan_tri_id=1)
+        qd8 = QuyDinh(key=QuyDinhKey.SOLDTIME, value=240, nhan_vien_quan_tri_id=1)
+        qd9 = QuyDinh(key=QuyDinhKey.NUTICKETCLASS, value=3, nhan_vien_quan_tri_id=1)
+
+        db.session.add_all([qd1, qd2, qd3, qd4, qd5, qd6, qd7, qd8, qd9])
+
+        db.session.commit()
