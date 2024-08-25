@@ -6,7 +6,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.model import InlineFormAdmin
 from flask_login import logout_user, login_required, login_user, current_user
 from flightapp import app, db, dao
-from models import *
+from flightapp.models import *
 
 
 class AuthenticatedView(ModelView):

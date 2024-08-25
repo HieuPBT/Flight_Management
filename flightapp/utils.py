@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from models import*
+from flightapp.models import *
 from flask_mail import Message
 from flask import render_template
 

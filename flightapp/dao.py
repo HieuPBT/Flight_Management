@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from flask import request, session
 
-from models import *
+from flightapp.models import *
 from flask_login import current_user
 import hashlib
 from sqlalchemy import func, and_
@@ -129,7 +129,7 @@ def get_available_flights(departure, destination, ticket_class, passengers, leav
             TuyenBay.san_bay_di_id == departure,
             TuyenBay.san_bay_den_id == destination,
             func.date(ChuyenBay.ngay_gio_khoi_hanh) == leave_date,
-            (HangVeChuyenBay.so_luong - count_tickets_sold_by_hvcb_id(HangVeChuyenBay.id)) >= passengers
+
         ))
             .all())
 

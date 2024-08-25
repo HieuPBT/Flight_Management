@@ -1,0 +1,36 @@
+services:
+  flask:
+    build:
+      context: .
+    container_name: flask
+    ports:
+      - "5020:5020"
+    depends_on:
+      - database
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql://root:Admin@123@database:3306/flightdb
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - flask
+    restart: unless-stopped
+  database:
+    image: mysql:8.0.39
+    container_name: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_DATABASE=flightdb
+      - MYSQL_ROOT_PASSWORD=Admin@123
+    volumes:
+      - ./db:/var/lib/mysql
+      - ./scripts/:/docker-entrypoint-initdb.d/
+    restart: unless-stopped
+volumes:
+  db:

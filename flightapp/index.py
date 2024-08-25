@@ -1,11 +1,9 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, session, g
-from flightapp import app, login, dao, configs
-from flask import Flask, render_template, request, redirect, jsonify, url_for, session, signals
+from flask import Flask, render_template, request, redirect, jsonify, url_for, session, signals, g
 from flightapp import app, login, dao, configs, mail
 from flask_login import login_user, logout_user, login_required
-from flask_mail import Message
 from flightapp.decorators import loggedin
-from models import *
+from flightapp.models import *
+from flightapp import admin
 import json
 import uuid
 import requests
@@ -17,6 +15,12 @@ from datetime import datetime
 from dotenv import find_dotenv, load_dotenv
 load_dotenv()
 import os
+# from pyngrok import ngrok
+# port = 5000
+# pyngrok.ngrok.set_auth_token('')
+# ngrok_public_url = ngrok.connect(port).public_url
+# print(ngrok_public_url)
+
 
 @app.route('/')
 def index():
@@ -161,13 +165,17 @@ def add_tickets_info():
         passengers = data.get('passengers')
         transid = ""
         payUrl = ""
+
+        server_url = request.host_url.strip('/')
+
         total_amount = int(passengers_quantity) * dao.get_hang_ve_chuyen_bay(int(hang_ve_chuyen_bay_id)).gia
         if payMethod == "MOMO":
-            momo_response = requests.post((os.getenv("SERVER_URL") + "/api/momo-pay"), json={'total': total_amount})
+            print(url_for('momo_pay', _external=True))
+            momo_response = requests.post(url_for('momo_pay', _external=True), json={'total': total_amount})
             transid = momo_response.json().get('orderId')
             payUrl = momo_response.json().get('payUrl')
         else:
-            zalo_res = requests.post((os.getenv("SERVER_URL") + "/api/zalo-pay"), json={'total': total_amount})
+            zalo_res = requests.post(url_for('zalo_pay', _external=True), json={'total': total_amount})
             transid = zalo_res.json().get('app_trans_id')
 
             payUrl = zalo_res.json().get('order_url')
@@ -213,8 +221,9 @@ def momo_pay():
     orderInfo = "pay with MoMo"
     requestType = "captureWallet"
     extraData = ""
-    redirectUrl = os.getenv("SERVER_URL")
-    ipnUrl = (os.getenv("SERVER_URL") + "/api/momo-pay/ipn")
+    server_url = request.host_url.strip('/')
+    redirectUrl = server_url
+    ipnUrl = f"{server_url}/api/momo-pay/ipn"
     rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType
     h = hmac.new(bytes(secretKey, 'ascii'), bytes(rawSignature, 'ascii'), hashlib.sha256)
     signature = h.hexdigest()
@@ -285,10 +294,12 @@ def zalo_pay():
     apptime = int(round(time() * 1000))  # miliseconds
     app_trans_id = "{:%y%m%d}_{}".format(datetime.today(), transID)
     print("t", app_trans_id)
-    embeddata = json.dumps({"redirecturl": os.getenv("SERVER_URL")})
     item = json.dumps([{}])
     amount = 400000
-    callback_url = (os.getenv("SERVER_URL") + "/api/zalo-pay/callback")
+    server_url = request.host_url.strip('/')
+    callback_url = f"{server_url}/api/zalo-pay/callback"
+    redirect_url = server_url
+    embeddata = json.dumps({"redirecturl": redirect_url})
 
     # Tạo chuỗi dữ liệu theo định dạng yêu cầu
     raw_data = "{}|{}|{}|{}|{}|{}|{}".format(appid, app_trans_id, appuser, amount, apptime, embeddata, item)
@@ -309,6 +320,7 @@ def zalo_pay():
         "bank_code": "zalopayapp",
         "mac": mac,
         "callback_url": callback_url
+
     }
 
     # Gửi yêu cầu tạo
@@ -374,4 +386,4 @@ def load_user(user_id):
 if __name__ == '__main__':
     with app.app_context():
         from flightapp import admin
-        app.run(debug=True)
+        app.run()
